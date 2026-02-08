@@ -50,7 +50,6 @@ for COMPONENT in "${PECL_EXTENSIONS[@]}"; do \
   pecl install ${COMPONENT}; \
 done
 
-
 # Copy binaries, scripts, and config.
 RUN mkdir -p /app
 WORKDIR /app
@@ -61,4 +60,4 @@ RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx
 COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx /etc/nginx /etc/nginx
 
-ENTRYPOINT ["/app/groundcontrol", "/platform/groundcontrol.toml"]
+ENTRYPOINT ["/app/groundcontrol", "/platform/webapp.toml"]
