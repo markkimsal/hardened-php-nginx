@@ -8,7 +8,6 @@ LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-ngin
 
 COPY prebuildfs /
 
-
 # Install required system packages and dependencies
 RUN install_packages ca-certificates curl git krb5-user libbz2-1.0 libcom-err2 libcrypt1 libffi8 libgcc-s1 libgmp10 libgnutls30 libgss-dev libgssapi-krb5-2 libhogweed6 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5-dev libkrb5support0 liblzma5 libmariadb3 libncursesw6 libnettle8 libnsl2 libp11-kit0 libreadline8 libsasl2-2 libsasl2-modules libsqlite3-0 libssl3 libstdc++6 libtasn1-6 libtinfo6 libtirpc3 libudev1 locales netbase openssh-client procps tzdata zlib1g locales libpcre2-dev libpcre2-posix3
 
@@ -50,11 +49,14 @@ for COMPONENT in "${PECL_EXTENSIONS[@]}"; do \
   pecl install ${COMPONENT}; \
 done
 
+FROM dhi.io/php:8.2.30-debian13-dev AS dev-image
 # Copy binaries, scripts, and config.
-RUN mkdir -p /app
-WORKDIR /app
+COPY appbuildfs /
+COPY approotfs /
+WORKDIR /platform
 
 ### Ground Control
+COPY --from=builder /opt /opt
 COPY --from=groundcontrolimage /groundcontrol ./
 RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx
 COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
