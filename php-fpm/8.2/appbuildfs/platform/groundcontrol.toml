@@ -1,0 +1,11 @@
+[[processes]]
+name = "hello"
+pre = "/bin/echo Hello {{USER}}! How are you today?"
+
+[[processes]]
+name = "php"
+run = [ "php", "-S", "0.0.0.0:8080" ]
+
+[[processes]]
+name = "nginx"
+run = [ "/usr/bin/nginx", "-g", "daemon off; user nobody;" ]

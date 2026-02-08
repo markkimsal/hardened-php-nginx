@@ -1,0 +1,37 @@
+EXT="$1"
+cd ${PHP_SRC_DIR}/ext
+popDir="$PWD"
+cd "$EXT"
+ls -alh
+phpize
+./configure --enable-option-checking=fatal
+make -j2
+make -j2 install
+make -j2 clean
+cd ${pipDir}
+modules="$EXT"
+
+	for module in $modules; do
+		extDir="$(php -d 'display_errors=stderr' -r 'echo ini_get("extension_dir");')"
+		cd "$extDir"
+		INI="${PHP_INI_DIR}/conf.d/docker-php-ext-${EXT}.ini"
+		module=$EXT
+		moduleFile=$EXT.so
+		if php -d 'display_errors=stderr' -r 'exit(extension_loaded("'"$EXT"'") ? 0 : 1);'; then
+			# this isn't perfect, but it's better than nothing
+			# (for example, 'opcache.so' presents inside PHP as 'Zend OPcache', not 'opcache')
+			echo >&2
+			echo >&2 "warning: $EXT ($module) is already loaded!"
+			echo >&2
+			continue
+		fi
+		# from official docker image script docker-php-ext-enable
+		if readelf --wide --syms "$moduleFile" | grep -q ' zend_extension_entry$'; then
+			# https://wiki.php.net/internals/extensions#loading_zend_extensions
+			line="zend_extension=$module"
+		else
+			line="extension=$module"
+		fi
+		echo " line ===== $line"
+		echo $line >> $INI
+	done
