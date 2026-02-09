@@ -1,5 +1,6 @@
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
 FROM dhi.io/nginx:1-debian13 as nginx
+FROM dhi.io/php:8.2.30-debian13-fpm AS prod-builder
 FROM dhi.io/php:8.2.30-debian13-dev AS builder
 
 LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-nginx:8.2" \
@@ -51,15 +52,21 @@ done
 
 FROM dhi.io/php:8.2.30-debian13-dev AS dev-image
 # Copy binaries, scripts, and config.
-COPY appbuildfs /
-COPY approotfs /
-WORKDIR /platform
-
 ### Ground Control
 COPY --from=builder /opt /opt
-COPY --from=groundcontrolimage /groundcontrol ./
+COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
+COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
+COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.d /opt/php-8.2/etc/php-fpm.d
+COPY --from=groundcontrolimage /groundcontrol /platform/
 RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx
 COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx /etc/nginx /etc/nginx
 
-ENTRYPOINT ["/app/groundcontrol", "/platform/webapp.toml"]
+#make nonroot user the same on dev and prod
+RUN sed -ie "s/nobody/nonroot/g" /etc/passwd && sed -ie "s/nobody/nonroot/g" /etc/passwde && sed -ie "s/nobody/nonroot/g" /etc/group
+
+COPY appbuildfs /
+COPY approotfs /
+
+
+ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]

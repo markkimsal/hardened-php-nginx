@@ -4,8 +4,8 @@ pre = "/bin/echo Hello {{USER}}! How are you today?"
 
 [[processes]]
 name = "php"
-run = [ "php", "-S", "0.0.0.0:9000" ]
+run = [ "/opt/php-8.2/sbin/php-fpm" ]
 
 [[processes]]
 name = "nginx"
-run = [ "/usr/sbin/nginx", "-g", "daemon off; user nobody;" ]
+run = [ "/usr/sbin/nginx", "-g", "daemon off; user nonroot;" ]
