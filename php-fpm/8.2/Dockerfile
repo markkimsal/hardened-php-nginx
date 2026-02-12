@@ -1,7 +1,7 @@
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/nginx:1-debian13 as nginx
 FROM dhi.io/php:8.2.30-debian13-fpm AS prod-builder
 FROM dhi.io/php:8.2.30-debian13-dev AS builder
+ARG WITH_OPENSWOOLE=0
 
 LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-nginx:8.2" \
       org.opencontainers.image.description="PHP-FPM, Nginx, groundcontrol" \
@@ -50,17 +50,39 @@ for COMPONENT in "${PECL_EXTENSIONS[@]}"; do \
   pecl install ${COMPONENT}; \
 done
 
+# SWOOLE
+RUN set -ex \
+    &&  if [ "$WITH_OPENSWOOLE" -ne "0" ] ; then \
+        pecl install openswoole; \
+    	bash /platform/docker-php-ext-enable openswoole ; \
+    fi
+
+RUN set -ex \
+    && PHP_EXT_DIR="$(php -d 'display_errors=stderr' -r 'echo ini_get("extension_dir");')"; \
+    ldd ${PHP_EXT_DIR}/*.so | grep "=>" | awk '{print $3}' | xargs tar -uhf /php-ext-deps.tar ;
+
+
+FROM dhi.io/nginx:1-debian13-dev AS nginx-builder
+RUN ldd /usr/sbin/nginx | grep "=>" | awk '{print $3}' | xargs tar -uhf nginx-deps.tar
+
 FROM dhi.io/php:8.2.30-debian13-dev AS dev-image
 # Copy binaries, scripts, and config.
 ### Ground Control
-COPY --from=builder /opt /opt
+COPY --from=builder /opt/php-8.2/lib /opt/php-8.2/lib
+COPY --from=builder /opt/php-8.2/etc /opt/php-8.2/etc
+COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
+RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
+
 COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.d /opt/php-8.2/etc/php-fpm.d
 COPY --from=groundcontrolimage /groundcontrol /platform/
 RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx
-COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
-COPY --from=nginx /etc/nginx /etc/nginx
+COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=nginx-builder /etc/nginx /etc/nginx
+COPY --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
+#RUN tar --overwrite -xvf /nginx-deps.tar -C / && rm nginx-deps.tar
+RUN tar --overwrite -xvf /nginx-deps.tar -C /
 
 #make nonroot user the same on dev and prod
 RUN sed -ie "s/nobody/nonroot/g" /etc/passwd && sed -ie "s/nobody/nonroot/g" /etc/passwde && sed -ie "s/nobody/nonroot/g" /etc/group
@@ -68,5 +90,36 @@ RUN sed -ie "s/nobody/nonroot/g" /etc/passwd && sed -ie "s/nobody/nonroot/g" /et
 COPY appbuildfs /
 COPY approotfs /
 
+ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
+
+FROM dhi.io/php:8.2.30-debian13-fpm AS prod-image
+# Copy binaries, scripts, and config.
+### Ground Control
+COPY --from=builder /usr/bin/ldd /usr/bin/ldd
+COPY --from=builder /opt/php-8.2/lib /opt/php-8.2/lib
+COPY --from=builder /opt/php-8.2/etc /opt/php-8.2/etc
+COPY --from=builder /opt/php-8.2/bin/php /opt/php-8.2/bin/php
+
+COPY --from=builder /usr/bin/tar /usr/bin/tar
+COPY --from=builder /lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libacl.so.1 
+COPY --from=builder /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libselinux.so.1
+COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
+#RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
+RUN ["/usr/bin/tar", "-xvf", "/php-ext-deps.tar", "-C", "/", "--ignore-failed-read", "--warning=none", "--skip-old-files"]
+
+COPY --from=groundcontrolimage /groundcontrol /platform/
+
+COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /run/nginx /run/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /lib/x86_64-linux-gnu/libcrypt.so.1 /lib/x86_64-linux-gnu/libcrypt.so.1
+#USER root
+#COPY  --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
+#RUN ["/usr/bin/tar", "--ignore-failed-read", "--warning=none", "--skip-old-files", "--exclude='lib/x86_64-linux-gnu/libcrypt.so.1'", "-xvf", "/nginx-deps.tar", "-C", "/"]
+#USER nonroot
+
+COPY approotfs /
 
 ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]

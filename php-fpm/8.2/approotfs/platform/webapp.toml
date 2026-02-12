@@ -1,10 +1,7 @@
 [[processes]]
-name = "hello"
-pre = "/bin/echo Hello {{USER}}! How are you today?"
-
-[[processes]]
 name = "php"
 run = [ "/opt/php-8.2/sbin/php-fpm" ]
+stop="SIGQUIT"
 
 [[processes]]
 name = "nginx"
