@@ -61,15 +61,30 @@ RUN set -ex \
     && PHP_EXT_DIR="$(php -d 'display_errors=stderr' -r 'echo ini_get("extension_dir");')"; \
     ldd ${PHP_EXT_DIR}/*.so | grep "=>" | awk '{print $3}' | xargs tar -uhf /php-ext-deps.tar ;
 
+#RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx /run/php-fpm
+RUN mkdir -p /run/nginx /run/php-fpm
 
+# --- nginx-builder stage for nginx-deps.tar
 FROM dhi.io/nginx:1-debian13-dev AS nginx-builder
 RUN ldd /usr/sbin/nginx | grep "=>" | awk '{print $3}' | xargs tar -uhf nginx-deps.tar
 
+# --- dev-image stage
 FROM dhi.io/php:8.2.30-debian13-dev AS dev-image
+#make nonroot user the same on dev and prod
+#RUN sed -ie "s/_apt/nonroot/g" /etc/passwd && sed -ie "s/_apt/nonroot/g" /etc/passwde && sed -ie "s/_apt/nonroot/g" /etc/group && sed -ie "s/42/65532/" /etc/passwd && sed -ie "s/42/65532/" /etc/passwde
+RUN echo "nonroot:x:65532:65532:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:65532:65532:nonroot:/home/nonroot:/bin/sh" >> /etc/passwde
+
 # Copy binaries, scripts, and config.
 ### Ground Control
 COPY --from=builder /opt/php-8.2/lib /opt/php-8.2/lib
 COPY --from=builder /opt/php-8.2/etc /opt/php-8.2/etc
+COPY --from=builder /run /run
+RUN ls -alh /run
+COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
+
 COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
 RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
 
@@ -77,15 +92,11 @@ COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.d /opt/php-8.2/etc/php-fpm.d
 COPY --from=groundcontrolimage /groundcontrol /platform/
-RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
 #RUN tar --overwrite -xvf /nginx-deps.tar -C / && rm nginx-deps.tar
 RUN tar --overwrite -xvf /nginx-deps.tar -C /
-
-#make nonroot user the same on dev and prod
-RUN sed -ie "s/nobody/nonroot/g" /etc/passwd && sed -ie "s/nobody/nonroot/g" /etc/passwde && sed -ie "s/nobody/nonroot/g" /etc/group
 
 COPY appbuildfs /
 COPY approotfs /
@@ -109,9 +120,9 @@ RUN ["/usr/bin/tar", "-xvf", "/php-ext-deps.tar", "-C", "/", "--ignore-failed-re
 
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
+COPY --chown=nonroot:nonroot --from=builder /run /run
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
-COPY --chown=nonroot:nonroot --from=nginx-builder /run/nginx /run/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /lib/x86_64-linux-gnu/libcrypt.so.1 /lib/x86_64-linux-gnu/libcrypt.so.1
