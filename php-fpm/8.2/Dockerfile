@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-ngin
 COPY prebuildfs /
 
 # Install required system packages and dependencies
-RUN install_packages ca-certificates curl git krb5-user libbz2-1.0 libcom-err2 libcrypt1 libffi8 libgcc-s1 libgmp10 libgnutls30 libgss-dev libgssapi-krb5-2 libhogweed6 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5-dev libkrb5support0 liblzma5 libmariadb3 libncursesw6 libnettle8 libnsl2 libp11-kit0 libreadline8 libsasl2-2 libsasl2-modules libsqlite3-0 libssl3 libstdc++6 libtasn1-6 libtinfo6 libtirpc3 libudev1 locales netbase openssh-client procps tzdata zlib1g locales libpcre2-dev libpcre2-posix3
+RUN install_packages ca-certificates curl git krb5-user libbz2-1.0 libcom-err2 libcrypt1 libffi8 libgcc-s1 libgmp10 libgnutls30 libgss-dev libgssapi-krb5-2 libhogweed6 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5-dev libkrb5support0 liblzma5 libmariadb3 libncursesw6 libnettle8 libnsl2 libp11-kit0 libreadline8 libsasl2-2 libsasl2-modules libsqlite3-0 libssl3 libstdc++6 libtasn1-6 libtinfo6 libtirpc3 libudev1 locales netbase openssh-client procps tzdata zlib1g libpcre2-dev libpcre2-posix3
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 RUN locale-gen en_US.UTF-8
@@ -26,11 +26,11 @@ SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 COPY appbuildfs /
 
 #  "opcache" \
+#  "pdo" \
+#  "intl" \
 RUN DOCKER_EXTENSIONS=( \
   "bcmath" \
-  "intl" \
   "pcntl" \
-  "pdo" \
   "pdo_mysql" \
   "mysqli" \
   "sysvmsg" \
@@ -59,17 +59,18 @@ RUN set -ex \
 
 RUN set -ex \
     && PHP_EXT_DIR="$(php -d 'display_errors=stderr' -r 'echo ini_get("extension_dir");')"; \
-    ldd ${PHP_EXT_DIR}/*.so | grep "=>" | awk '{print $3}' | xargs tar -uhf /php-ext-deps.tar ;
+    ldd ${PHP_EXT_DIR}/*.so | grep -v "libc\.so" | grep "=>" | awk '{print $3}' | xargs tar -uhf /php-ext-deps.tar ;
 
 #RUN mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx /run/nginx /run/php-fpm
 RUN mkdir -p /run/nginx /run/php-fpm
 
 # --- nginx-builder stage for nginx-deps.tar
 FROM dhi.io/nginx:1-debian13-dev AS nginx-builder
-RUN ldd /usr/sbin/nginx | grep "=>" | awk '{print $3}' | xargs tar -uhf nginx-deps.tar
+RUN ldd /usr/sbin/nginx | grep -v "libc\.so" | grep "=>" | awk '{print $3}' | xargs tar -uhf nginx-deps.tar
 
 # --- dev-image stage
 FROM dhi.io/php:8.2.30-debian13-dev AS dev-image
+
 #make nonroot user the same on dev and prod
 #RUN sed -ie "s/_apt/nonroot/g" /etc/passwd && sed -ie "s/_apt/nonroot/g" /etc/passwde && sed -ie "s/_apt/nonroot/g" /etc/group && sed -ie "s/42/65532/" /etc/passwd && sed -ie "s/42/65532/" /etc/passwde
 RUN echo "nonroot:x:65532:65532:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:65532:65532:nonroot:/home/nonroot:/bin/sh" >> /etc/passwde
@@ -95,12 +96,20 @@ COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
-#RUN tar --overwrite -xvf /nginx-deps.tar -C / && rm nginx-deps.tar
-RUN tar --overwrite -xvf /nginx-deps.tar -C /
+RUN tar --overwrite -xvf /nginx-deps.tar -C / && rm nginx-deps.tar
+#RUN tar --overwrite -xvf /nginx-deps.tar -C /
 
+COPY prebuildfs /
 COPY appbuildfs /
 COPY approotfs /
 
+#install tools for CI / local dev: git, jq, ps, ssh, etc
+RUN install_packages git jq openssh-client procps tzdata unzip gpg curl
+
+#install composer
+RUN /platform/docker-composer-install
+
+WORKDIR "/app"
 ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 FROM dhi.io/php:8.2.30-debian13-fpm AS prod-image
@@ -133,4 +142,5 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /lib/x86_64-linux-gnu/libcrypt
 
 COPY approotfs /
 
+WORKDIR "/app"
 ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
