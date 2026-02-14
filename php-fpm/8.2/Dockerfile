@@ -12,7 +12,8 @@ COPY prebuildfs /
 # Install required system packages and dependencies
 RUN install_packages ca-certificates curl git krb5-user libbz2-1.0 libcom-err2 libcrypt1 libffi8 libgcc-s1 libgmp10 libgnutls30 libgss-dev libgssapi-krb5-2 libhogweed6 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5-dev libkrb5support0 liblzma5 libmariadb3 libncursesw6 libnettle8 libnsl2 libp11-kit0 libreadline8 libsasl2-2 libsasl2-modules libsqlite3-0 libssl3 libstdc++6 libtasn1-6 libtinfo6 libtirpc3 libudev1 locales netbase openssh-client procps tzdata zlib1g libpcre2-dev libpcre2-posix3
 
-RUN install_packages libffi-dev libzip-dev
+RUN install_packages libffi-dev libzip-dev libzip5
+RUN install_packages cron
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 RUN locale-gen en_US.UTF-8
@@ -101,7 +102,7 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/ngin
 COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 
 COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
-RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
+RUN tar --overwrite -xvf /php-ext-deps.tar --exclude=lib/x86_64-linux-gnu/libzip.so.5 --exclude=lib/x86_64-linux-gnu/libbz2.so.1.0 -C / && rm php-ext-deps.tar
 
 COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
@@ -112,6 +113,11 @@ COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
 RUN tar --overwrite -xvf /nginx-deps.tar -C / && rm nginx-deps.tar
 #RUN tar --overwrite -xvf /nginx-deps.tar -C /
+
+#cron
+COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
+COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
+COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY prebuildfs /
 COPY appbuildfs /
@@ -139,7 +145,7 @@ COPY --from=builder /lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/liba
 COPY --from=builder /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libselinux.so.1
 COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
 #RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
-RUN ["/usr/bin/tar", "-xvf", "/php-ext-deps.tar", "-C", "/", "--ignore-failed-read", "--warning=none", "--skip-old-files"]
+RUN ["/usr/bin/tar", "-xvf", "/php-ext-deps.tar", "-C", "/", "--ignore-failed-read", "--warning=none", "--skip-old-files", "--exclude=lib/x86_64-linux-gnu/libzip.so.5", "--exclude=lib/x86_64-linux-gnu/libbz2.so.1.0"]
 
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
@@ -149,6 +155,12 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/ng
 COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /lib/x86_64-linux-gnu/libcrypt.so.1 /lib/x86_64-linux-gnu/libcrypt.so.1
+
+#cron
+COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
+COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
+COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
+
 #USER root
 #COPY  --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
 #RUN ["/usr/bin/tar", "--ignore-failed-read", "--warning=none", "--skip-old-files", "--exclude='lib/x86_64-linux-gnu/libcrypt.so.1'", "-xvf", "/nginx-deps.tar", "-C", "/"]
