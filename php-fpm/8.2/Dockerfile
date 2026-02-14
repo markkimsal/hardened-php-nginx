@@ -102,7 +102,7 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/ngin
 COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 
 COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
-RUN tar --overwrite -xvf /php-ext-deps.tar --exclude=lib/x86_64-linux-gnu/libzip.so.5 --exclude=lib/x86_64-linux-gnu/libbz2.so.1.0 -C / && rm php-ext-deps.tar
+RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
 
 COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
@@ -145,7 +145,9 @@ COPY --from=builder /lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/liba
 COPY --from=builder /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libselinux.so.1
 COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
 #RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
-RUN ["/usr/bin/tar", "-xvf", "/php-ext-deps.tar", "-C", "/", "--ignore-failed-read", "--warning=none", "--skip-old-files", "--exclude=lib/x86_64-linux-gnu/libzip.so.5", "--exclude=lib/x86_64-linux-gnu/libbz2.so.1.0"]
+USER 0
+RUN ["/usr/bin/tar", "-xvf", "/php-ext-deps.tar", "-C", "/", "--ignore-failed-read", "--warning=none", "--skip-old-files"]
+USER nonroot
 
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
