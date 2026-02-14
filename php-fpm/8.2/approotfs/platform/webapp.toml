@@ -1,8 +1,8 @@
 [[processes]]
 name = "php"
-run = [ "/opt/php-8.2/sbin/php-fpm" ]
+run = [ "/opt/php/sbin/php-fpm" ]
 stop="SIGQUIT"
 
 [[processes]]
 name = "nginx"
-run = [ "/usr/sbin/nginx", "-g", "daemon off; user nonroot;" ]
+run = { only-env=[], command = ["/usr/sbin/nginx", "-g", "daemon off; user nonroot;"] }
