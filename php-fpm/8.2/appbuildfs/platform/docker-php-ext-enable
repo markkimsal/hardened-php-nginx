@@ -1,10 +1,9 @@
 popDir="$PWD"
 EXT="$1"
+extDir="$(php -d 'display_errors=stderr' -r 'echo ini_get("extension_dir");')"
 modules="$EXT"
-
 	for module in $modules; do
-		extDir="$(php -d 'display_errors=stderr' -r 'echo ini_get("extension_dir");')"
-		cd "$extDir"
+		cd ${extDir}
 		INI="${PHP_INI_DIR}/conf.d/docker-php-ext-${EXT}.ini"
 		module=$EXT
 		moduleFile=$EXT.so

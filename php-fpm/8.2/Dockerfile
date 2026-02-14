@@ -12,6 +12,8 @@ COPY prebuildfs /
 # Install required system packages and dependencies
 RUN install_packages ca-certificates curl git krb5-user libbz2-1.0 libcom-err2 libcrypt1 libffi8 libgcc-s1 libgmp10 libgnutls30 libgss-dev libgssapi-krb5-2 libhogweed6 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5-dev libkrb5support0 liblzma5 libmariadb3 libncursesw6 libnettle8 libnsl2 libp11-kit0 libreadline8 libsasl2-2 libsasl2-modules libsqlite3-0 libssl3 libstdc++6 libtasn1-6 libtinfo6 libtirpc3 libudev1 locales netbase openssh-client procps tzdata zlib1g libpcre2-dev libpcre2-posix3
 
+RUN install_packages libffi-dev libzip-dev
+
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 RUN locale-gen en_US.UTF-8
 RUN update-locale en_US.UTF-8
@@ -25,24 +27,36 @@ SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
 COPY appbuildfs /
 
-#  "opcache" \
-#  "pdo" \
-#  "intl" \
 RUN DOCKER_EXTENSIONS=( \
   "bcmath" \
+  "ffi" \
   "pcntl" \
   "pdo_mysql" \
   "mysqli" \
   "sysvmsg" \
   "sysvsem" \
   "sysvshm" \
+  "zip" \
 ) ; \
 cd /platform/; \
 for COMPONENT in "${DOCKER_EXTENSIONS[@]}"; do \
     echo "--------------------------- installing extension: ${COMPONENT}" ; \
     bash ./docker-php-ext-install ${COMPONENT} ; \
 done
-  
+
+RUN DOCKER_DEFAULT_EXTENSIONS=( \
+  "bcmath" \
+  "pcntl" \
+  "pdo_mysql" \
+  "mysqli" \
+  "zip" \
+) ; \
+cd /platform/; \
+for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
+    echo "--------------------------- installing extension: ${COMPONENT}" ; \
+    bash ./docker-php-ext-enable ${COMPONENT} ; \
+done
+
 RUN PECL_EXTENSIONS=( \
   "xdebug" \
 ); \
