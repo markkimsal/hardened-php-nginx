@@ -130,3 +130,25 @@ stop="SIGQUIT"
 name = "nginx"
 run = {only-env = [], command=["/usr/sbin/nginx", "-g", "daemon off; user nonroot;"]}
 ```
+
+
+How to build
+===
+```
+docker build -t hardened-php-nginx:8.3-alpine-3.22-fpm -f php-fpm/8.3/alpine-3.22/Dockerfile php-fpm/8.3/alpine-3.22/
+```
+
+Process to updated extension dependencies JSON
+```
+export platform=apline3.22
+
+docker build --target=builder --progress=plain -t hardened-php-nginx:8.3-${platform}-builder -f php-fpm/8.3/${platform}/Dockerfile php-fpm/8.3/${platform}/
+
+docker run --name=builder hardened-php-nginx:8.3-${platform}-builder
+
+docker cp builder:/php-ext-deps.txt ./php-ext-deps.txt
+
+cat ./php-ext-deps.txt
+
+docker rm builder
+```
