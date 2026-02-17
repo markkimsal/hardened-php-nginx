@@ -34,6 +34,7 @@ The hardened production image `*-fpm` contains no shell,so you will be unable to
 | php (cli)            | X                   |                    | X                       | X               |
 | nginx                | X                   |                    | X                       |                 |
 | cron (\*)            | X                   |                    | X                       |                 |
+| composer             |                     |                    | X                       |                 |
 | git                  |                     |                    | X                       |                 |
 | jq                   |                     |                    | X                       |                 |
 | curl                 |                     |                    | X                       |                 |
@@ -56,13 +57,13 @@ Extensions built
 | opcache              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | openssl              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | sqlite3 (PDO)        | 🚀                   |  🚀                 | 🚀                       | 🚀               |
-| ZIP                  | 🚀                   |                     | 🚀                       |                 |
-| mysql (PDO)          | 🚀                   |                     | 🚀                       |                 |
-| pcntl                | 🚀                   |                     | 🚀                       |                 |
-| OpenSwooole          | ✅                   |                     | ✅                       |                 |
-| FFI                  | ✅                   |                     | ✅                       |                 |
-| Xdebug               | ✅                   |                     | ✅                       |                 |
-| sysvshm              | ✅                   |                     | ✅                       |                 |
+| ZIP                  | 🚀                   |                     | 🚀                       |                  |
+| mysql (PDO)          | 🚀                   |                     | 🚀                       |                  |
+| pcntl                | 🚀                   |                     | 🚀                       |                  |
+| OpenSwooole          | ✅                   |                     | ✅                       |                  |
+| FFI                  | ✅                   |                     | ✅                       |                  |
+| Xdebug               | ✅                   |                     | ✅                       |                  |
+| sysvshm              | ✅                   |                     | ✅                       |                  |
 
 
 🚀 - built and enabled by default
@@ -107,9 +108,29 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/worker-queue.toml"]
 ```toml
 [[processes]]
 name = "artisan-queue"
-run = ["/opt/php/sbin/php", "artisan", "queue:work"]
+run = ["/opt/php/sbin/php", "artisan", "queue:work", "{{QUEUE_WORK_ARGS}}"]
 stop="SIGQUIT"
 ```
+
+Docker cli command
+```
+docker run -e "QUEUE_WORK_ARGS=redis --tries=3 --backoff=3" ...
+```
+
+Docker compose file:
+```yaml
+services:
+    scheduler:
+        image: your-app:latest
+        environment:
+          QUEUE_WORK_ARGS: redis --tries=3 --backoff=3
+        entrypoint:
+          - /platform/groundcontrol
+          - /platform/artisan-schedule.toml
+
+```
+
+
 
 Run artisan scheduler
 ---
