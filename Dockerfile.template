@@ -120,9 +120,6 @@ COPY --from=prod-builder /opt/php-<?= $majorVersion ?>/etc/php-fpm.d /opt/php-<?
 COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
-#COPY --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
-#RUN tar --overwrite -xvf /nginx-deps.tar -C / && rm nginx-deps.tar
-#RUN tar --overwrite -xvf /nginx-deps.tar -C /
 
 <?php if (str_contains($versionTag, 'debian')): ?>
 #cron
