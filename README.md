@@ -1,18 +1,17 @@
 Hardened PHP + Nginx
 ===
-
 Image that combines nginx with dhi.io hardened PHP.  Uses groundcontrol to manage various entrypoints.
 
-Items this project adds to the dhi.io hardened fpm image:
+One image for your local, CI, and prod environments.  One image for your FPM, scheduler, worker instances.
+
+Items this project adds to the dhi.io hardened `*-fpm` image:
   * nginx
   * cron
   * php (cli sapi)
-  * tar
-  * ldd
   * various php extensions
 
 
-Items this project adds to the dhi.io hardened -dev image:
+Items this project adds to the dhi.io hardened `*-dev` image:
   * all items from the -fpm image, plus
   * curl
   * composer
@@ -28,8 +27,51 @@ This project's `*-dev` image is meant to be used as a local development image AN
 
 The hardened production image `*-fpm` contains no shell,so you will be unable to run artisan commands on production without some extra steps.
 
-Run php-fpm & Nginx
----
+
+|                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
+|----------------------|---------------------|--------------------|-------------------------|-----------------|
+| php-fpm              | X                   |  X                 | X                       | X               |
+| php (cli)            | X                   |                    | X                       | X               |
+| nginx                | X                   |                    | X                       |                 |
+| cron (\*)            | X                   |                    | X                       |                 |
+| git                  |                     |                    | X                       |                 |
+| jq                   |                     |                    | X                       |                 |
+| curl                 |                     |                    | X                       |                 |
+| unzip                |                     |                    | X                       |                 |
+| gpg                  |                     |                    | X                       |                 |
+| procps               |                     |                    | X                       |                 |
+| ssh                  |                     |                    | X                       |                 |
+
+
+Extensions built
+|                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
+|----------------------|---------------------|--------------------|-------------------------|-----------------|
+| BCMATH               | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| Intl                 | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| cur                  | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| dom                  | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| libxml               | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| mbstring             | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| mysqlnd              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| opcache              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| openssl              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| sqlite3 (PDO)        | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| ZIP                  | 🚀                   |                     | 🚀                       |                 |
+| mysql (PDO)          | 🚀                   |                     | 🚀                       |                 |
+| pcntl                | 🚀                   |                     | 🚀                       |                 |
+| OpenSwooole          | ✅                   |                     | ✅                       |                 |
+| FFI                  | ✅                   |                     | ✅                       |                 |
+| Xdebug               | ✅                   |                     | ✅                       |                 |
+| sysvshm              | ✅                   |                     | ✅                       |                 |
+
+
+🚀 - built and enabled by default
+✅ - built, but not enabled
+
+\* Cron is available on all alpine image variants because it is part of busybox
+
+Run a basic PHP-fpm & Nginx setup
+===
 
 `/platform/webapp.toml`
 ```toml
@@ -51,6 +93,8 @@ This image is designed to run as a front-end server with Nginx + PHP-fpm, an art
 
 Run a worker queue. 
 ---
+`SIGQUIT` is designed to give some amount of grace period to running jobs before moving on to hard shutdown.
+
 ```Dockerfile
 FROM hardened-php-nginx
 
@@ -69,6 +113,7 @@ stop="SIGQUIT"
 
 Run artisan scheduler
 ---
+Run the artisan scheduler from a cron job.
 
 ```Dockerfile
 FROM hardened-php-nginx
@@ -107,7 +152,7 @@ services:
 
 ```
 
-Optimize your configuration
+Deploy production Laravel app
 ---
 You cannot optimize your config files in your CI/CD pipeline without exposing all secrets to the pipeline environment.  If your secrets are only available in the live environment, you must `php artisan config:cache` in the live environment.
 
@@ -134,8 +179,15 @@ run = {only-env = [], command=["/usr/sbin/nginx", "-g", "daemon off; user nonroo
 
 How to build
 ===
+You can use this projects's `*-dev` image as your starting FROM line to make changes to your own image, or you can build
+this project directly and incorporate your changes from the start.
+
 ```
-docker build -t hardened-php-nginx:8.3-alpine-3.22-fpm -f php-fpm/8.3/alpine-3.22/Dockerfile php-fpm/8.3/alpine-3.22/
+export platform=debian13
+
+docker build --target=prod-image -t hardened-php-nginx:8.3-${platform}-fpm php-fpm/8.3/${platform}/
+
+docker build --target=dev-image -t hardened-php-nginx:8.3-${platform}-dev php-fpm/8.3/${platform}/
 ```
 
 Process to updated extension dependencies JSON
