@@ -84,7 +84,33 @@ stop="SIGQUIT"
 [[processes]]
 name = "nginx"
 run = [ "/usr/sbin/nginx", "-g", "daemon off; user nonroot;" ]
+```
 
+Enable a compiled module
+---
+Turn on xdebug for your local setup
+
+```ini
+# project/conf.d/xdebug.ini
+[xdebug]
+zend_extension=xdebug.so
+xdebug.mode=debug,coverage
+xdebug.client_host=host.docker.internal
+xdebug.client_port=10427
+xdebug.discover_client_host=1
+xdebug.remote_handler=dbgp
+xdebug.log=/dev/null
+```
+
+```yaml
+services:
+    webapp:
+        image: 'hardened-php-nginx:8.4-debian13-dev'
+        ports:
+            - '7071:8080'
+        volumes:
+            - '.:/app'
+            - './conf.d/xdebug.ini:/opt/php-8.2/etc/php/conf.d/xdebug.ini'
 ```
 
 Usage with Laravel
