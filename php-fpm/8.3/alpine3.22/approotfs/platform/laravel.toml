@@ -1,0 +1,16 @@
+[[processes]]
+name = "optimize-laravel"
+pre = "php artisan optimize"
+
+[[processes]]
+name = "migrate database"
+pre = "php artisan migrate -f"
+
+[[processes]]
+name = "php"
+run = [ "/opt/php-8.2/sbin/php-fpm" ]
+stop="SIGQUIT"
+
+[[processes]]
+name = "nginx"
+run = {only-env = [], command=["/usr/sbin/nginx", "-g", "daemon off; user nonroot;"]}

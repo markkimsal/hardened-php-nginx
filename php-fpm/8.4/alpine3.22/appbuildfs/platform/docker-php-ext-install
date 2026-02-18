@@ -1,0 +1,11 @@
+EXT="$1"
+cd ${PHP_SRC_DIR}/ext
+popDir="$PWD"
+cd "$EXT"
+ls -alh
+phpize
+./configure --enable-option-checking=fatal
+make -j2
+make -j2 install
+make -j2 clean
+cd ${popDir}

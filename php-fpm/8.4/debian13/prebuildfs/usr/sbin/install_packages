@@ -1,0 +1,32 @@
+#!/bin/sh
+#  Apt installer helper for Docker images
+#  taken form phusion/baseimage  https://github.com/phusion/baseimage-docker/blob/master/image/bin/install_clean
+
+pm='dpkg'
+if [ -e /lib/apk/db/installed ]; then
+	pm='apk'
+fi
+
+ARGS="$*"
+NO_RECOMMENDS="--no-install-recommends"
+RECOMMENDS="--install-recommends"
+if [ $pm == 'dpkg' ]; then
+	#if [[ $ARGS =~ "$RECOMMENDS" ]]; then
+	#	NO_RECOMMENDS=""
+	#	ARGS=$(sed "s/$RECOMMENDS//g" <<<"$ARGS")
+	#fi
+
+	echo "Installing $ARGS"
+
+	apt-get -q update && apt-get -qy install $NO_RECOMMENDS $ARGS \
+		&& apt-get -qy autoremove \
+		&& apt-get clean \
+		&& rm -r /var/lib/apt/lists/*
+
+fi
+
+if [ $pm == 'apk' ]; then
+	echo "Installing $ARGS"
+	apk update \
+	&& apk add --no-cache $ARGS
+fi
