@@ -87,12 +87,6 @@ RUN \
 
 RUN mkdir -p /run/nginx /run/php-fpm
 
-# Nginx Builder
-# ===========
-# nginx-builder stage for nginx-deps.tar
-FROM dhi.io/nginx:1-<?php echo $variant; ?>-dev AS nginx-builder
-RUN ldd /usr/sbin/nginx 2>/dev/null| grep -v "libc\.so" | grep "=>" | awk '{print $3}' | xargs tar -chf nginx-deps.tar
-
 # Dev-Image
 # ===========
 # dev-image stage
@@ -185,13 +179,7 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
-#COPY --chown=nonroot:nonroot --from=nginx-builder /lib/x86_64-linux-gnu/libcrypt.so.1 /lib/x86_64-linux-gnu/libcrypt.so.1
-COPY --chown=nonroot:nonroot --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
-#USER 0
-#RUN ["/usr/bin/tar", "-xvf", "/nginx-deps.tar", "-C", "/", "--ignore-failed-read", "--warning=none", "--skip-old-files"]
-#RUN ["tar", "-xvf", "/nginx-deps.tar", "-C", "/"]
-#USER nonroot
-
+# nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
 <?php if (str_contains($versionTag, 'debian')): ?>
 #cron
@@ -199,11 +187,6 @@ COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
 COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
 COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 <?php endif; ?>
-
-#USER root
-#COPY  --from=nginx-builder /nginx-deps.tar /nginx-deps.tar
-#RUN ["/usr/bin/tar", "--ignore-failed-read", "--warning=none", "--skip-old-files", "--exclude='lib/x86_64-linux-gnu/libcrypt.so.1'", "-xvf", "/nginx-deps.tar", "-C", "/"]
-#USER nonroot
 
 COPY approotfs /
 
