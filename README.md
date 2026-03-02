@@ -27,7 +27,6 @@ This project's `*-dev` image is meant to be used as a local development image AN
 
 The hardened production image `*-fpm` contains no shell,so you will be unable to run artisan commands on production without some extra steps.
 
-
 |                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
 |----------------------|---------------------|--------------------|-------------------------|-----------------|
 | php-fpm              | X                   |  X                 | X                       | X               |
@@ -70,6 +69,23 @@ Extensions built
 ✅ - built, but not enabled
 
 \* Cron is available on all alpine image variants because it is part of busybox
+
+
+UID/GID differences from dhi.io images
+===
+The `*-dev` image has no `nonroot` user defined, so it is fundamentally different from the prod `*-fpm` image and not
+suitable as a local dev environment.  This `hardened-php-nginx` adds a `nonroot` user to the `*-dev` image.
+
+The specific UID/GID are configurable with Dockerfile build env vars (not at runtime), but default to `33`
+(for `www-data`) for prod `*-fpm` images and `1000` (default non-system user id) for `*-dev` images.  It is likely that
+you might be upgrading to this image from another image and that external resources and cached files are owned by user 
+`www-data` by convention.
+
+|                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
+|----------------------|---------------------|--------------------|-------------------------|-----------------|
+| nonroot (UID:GID)    | 33:33               |  65532:65532       | 1000:1000               | N/A             |
+| root                 | N/A                 |  N/A               | 0:0                     | 0:0             |
+
 
 Run a basic PHP-fpm & Nginx setup
 ===
@@ -234,7 +250,7 @@ export platform=debian13
 
 docker build --target=prod-image -t hardened-php-nginx:8.3-${platform}-fpm php-fpm/8.3/${platform}/
 
-docker build --target=dev-image -t hardened-php-nginx:8.3-${platform}-dev php-fpm/8.3/${platform}/
+docker build --target=dev-image --build-arg UID=1000 --build-arg GID=1000 -t hardened-php-nginx:8.3-${platform}-dev php-fpm/8.3/${platform}/
 ```
 
 Process to updated extension dependencies JSON

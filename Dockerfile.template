@@ -1,7 +1,13 @@
+ARG UID=33
+ARG GID=33
+ARG WITH_OPENSWOOLE=0
+
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
 FROM dhi.io/php:<?php echo $versionTag; ?>-fpm AS prod-builder
 FROM dhi.io/php:<?php echo $versionTag; ?>-dev AS builder
-ARG WITH_OPENSWOOLE=0
+ARG UID
+ARG GID
+ARG WITH_OPENSWOOLE
 
 LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-nginx:<?php echo $majorVersion; ?>" \
       org.opencontainers.image.description="PHP-FPM, Nginx, groundcontrol" \
@@ -87,14 +93,25 @@ RUN \
 
 RUN mkdir -p /run/nginx /run/php-fpm
 
+# build-arg interpolation _requires_ a shell, no matter what docker build logs shows you
+# (when RUN is used with exec style, JSON style params)
+# so we will build passwd and group here for prod image to copy
+RUN echo "nonroot:x:${GID}:nonroot\nshadow:x:42:\nnobody:x:65534:" >> /etc/prod-group
+RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/sh" >> /etc/prod-passwd
+
+# Nginx Builder
+# ===========
+# nginx-builder stage for nginx-deps.tar
+FROM dhi.io/nginx:1-<?php echo $variant; ?>-dev AS nginx-builder
+
 # Dev-Image
 # ===========
 # dev-image stage
 FROM dhi.io/php:<?php echo $versionTag; ?>-dev AS dev-image
-
+ARG UID
+ARG GID
 #make nonroot user the same on dev and prod
-#RUN sed -ie "s/_apt/nonroot/g" /etc/passwd && sed -ie "s/_apt/nonroot/g" /etc/passwde && sed -ie "s/_apt/nonroot/g" /etc/group && sed -ie "s/42/65532/" /etc/passwd && sed -ie "s/42/65532/" /etc/passwde
-RUN echo "nonroot:x:65532:65532:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:65532:65532:nonroot:/home/nonroot:/bin/sh" >> /etc/passwde
+RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh" >> /etc/passwde
 
 # Copy binaries, scripts, and config.
 ### Ground Control
@@ -104,8 +121,8 @@ COPY --from=builder /run /run
 RUN ls -alh /run
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
-COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
-COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
+COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=builder <?php extension_deps(); ?>
 
 COPY --from=prod-builder /opt/php-<?= $majorVersion ?>/sbin/php-fpm /opt/php-<?= $majorVersion ?>/sbin/php-fpm
@@ -146,6 +163,9 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 # Prod Image
 # ===========
 FROM dhi.io/php:<?php echo $versionTag; ?>-fpm AS prod-image
+ARG UID
+ARG GID
+
 # Copy binaries, scripts, and config.
 ### Ground Control
 COPY --from=builder /opt/php-<?= $majorVersion ?>/lib /opt/php-<?= $majorVersion ?>/lib
@@ -157,12 +177,6 @@ COPY --from=builder /opt/php-<?= $majorVersion ?>/bin/php /opt/php-<?= $majorVer
 COPY --from=builder /lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libacl.so.1 
 COPY --from=builder /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libselinux.so.1
 COPY --from=builder <?php extension_deps(); ?>
-
-#COPY --from=builder /php-ext-deps.tar /php-ext-deps.tar
-#RUN tar --overwrite -xvf /php-ext-deps.tar -C / && rm php-ext-deps.tar
-#USER 0
-#RUN ["tar", "-xvf", "/php-ext-deps.tar", "-C", "/"]
-#USER nonroot
 <?php endif; ?>
 
 <?php if (str_contains($versionTag, 'alpine')): ?>
@@ -170,6 +184,9 @@ COPY --from=builder /usr/lib /usr/lib
 <?php endif; ?>
 
 
+#set nonroot userid to something more conventional like 33 for www-data
+COPY --from=builder /etc/prod-passwd /etc/passwd
+COPY --from=builder /etc/prod-group  /etc/group
 
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
@@ -177,8 +194,8 @@ COPY --chown=nonroot:nonroot --from=builder /run /run
 COPY --chown=nonroot:nonroot --from=builder /run /var/run
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
-COPY --chown=nonroot:nonroot --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
-COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
+COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
 <?php if (str_contains($versionTag, 'debian')): ?>
