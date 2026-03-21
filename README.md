@@ -247,10 +247,11 @@ this project directly and incorporate your changes from the start.
 
 ```
 export platform=debian13
+export phpversion=8.3
 
-docker build --target=prod-image -t hardened-php-nginx:8.3-${platform}-fpm php-fpm/8.3/${platform}/
+docker build --target=prod-image -t hardened-php-nginx:${phpversion}-${platform}-fpm php-fpm/${phpversion}/${platform}/
 
-docker build --target=dev-image --build-arg UID=1000 --build-arg GID=1000 -t hardened-php-nginx:8.3-${platform}-dev php-fpm/8.3/${platform}/
+docker build --target=dev-image --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t hardened-php-nginx:${phpversion}-${platform}-dev php-fpm/${phpversion}/${platform}/
 ```
 
 Process to updated extension dependencies JSON

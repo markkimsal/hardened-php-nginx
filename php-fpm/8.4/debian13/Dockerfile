@@ -140,7 +140,9 @@ FROM dhi.io/php:8.4.18-debian13-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
-RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh" >> /etc/passwde
+RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/group
+# RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:${GID}:nonroot" >> /etc/group && echo 'nonroot:!::0:99999:7:::' > /etc/shadow
+# RUN head -n 1 /etc/passwd | tee foobar && tail -n 3 /etc/passwd | tee foobar
 
 # Copy binaries, scripts, and config.
 ### Ground Control
@@ -225,6 +227,7 @@ COPY --from=builder /lib/x86_64-linux-gnu/libcrypt.so.1 \
 
 
 #set nonroot userid to something more conventional like 33 for www-data
+# RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/group
 COPY --from=builder /etc/prod-passwd /etc/passwd
 COPY --from=builder /etc/prod-group  /etc/group
 
