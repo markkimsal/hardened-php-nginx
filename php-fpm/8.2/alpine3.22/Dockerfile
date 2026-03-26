@@ -107,6 +107,7 @@ ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
 RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/group
+RUN chown ${UID}:${GID} /home/nonroot
 
 # Copy binaries, scripts, and config.
 ### Ground Control
