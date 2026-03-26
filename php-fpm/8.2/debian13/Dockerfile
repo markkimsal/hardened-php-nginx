@@ -68,9 +68,9 @@ COPY appbuildfs /
 RUN DOCKER_EXTENSIONS=( \
   "bcmath" \
   "ffi" \
+  "mysqli" \
   "pcntl" \
   "pdo_mysql" \
-  "mysqli" \
   "sysvmsg" \
   "sysvsem" \
   "sysvshm" \
@@ -97,6 +97,7 @@ done
 
 RUN pecl_extensions=( \
   "xdebug" \
+  "redis" \
 ); \
 for component in "${pecl_extensions[@]}"; do \
   pecl install ${component}; \
@@ -141,8 +142,6 @@ ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
 RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/group
-# RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh" >> /etc/passwd  && echo "nonroot:x:${GID}:nonroot" >> /etc/group && echo 'nonroot:!::0:99999:7:::' > /etc/shadow
-# RUN head -n 1 /etc/passwd | tee foobar && tail -n 3 /etc/passwd | tee foobar
 
 # Copy binaries, scripts, and config.
 ### Ground Control

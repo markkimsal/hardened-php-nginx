@@ -39,9 +39,9 @@ COPY appbuildfs /
 RUN DOCKER_EXTENSIONS=( \
   "bcmath" \
   "ffi" \
+  "mysqli" \
   "pcntl" \
   "pdo_mysql" \
-  "mysqli" \
   "sysvmsg" \
   "sysvsem" \
   "sysvshm" \
@@ -68,6 +68,7 @@ done
 
 RUN pecl_extensions=( \
   "xdebug" \
+  "redis" \
 ); \
 for component in "${pecl_extensions[@]}"; do \
   pecl install ${component}; \

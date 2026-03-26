@@ -62,6 +62,7 @@ Extensions built
 | OpenSwooole          | ✅                   |                     | ✅                       |                  |
 | FFI                  | ✅                   |                     | ✅                       |                  |
 | Xdebug               | ✅                   |                     | ✅                       |                  |
+| Redis                | ✅                   |                     | ✅                       |                  |
 | sysvshm              | ✅                   |                     | ✅                       |                  |
 
 
