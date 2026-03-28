@@ -151,7 +151,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/worker-queue.toml"]
 ```toml
 [[processes]]
 name = "artisan-queue"
-run = ["/opt/php/sbin/php", "artisan", "queue:work", "{{QUEUE_WORK_ARGS}}"]
+run = ["/opt/php/bin/php", "artisan", "queue:work", "{{QUEUE_NAME}}", "--tries={{QUEUE_RETRIES}}", "--backoff={{QUEUE_BACKOFF}}"]
 stop="SIGQUIT"
 ```
 
@@ -166,10 +166,12 @@ services:
     scheduler:
         image: your-app:latest
         environment:
-          QUEUE_WORK_ARGS: redis --tries=3 --backoff=3
+          QUEUE_NAME: redis
+          QUEUE_RETRIES: 3
+          QUEUE_BACKOFF: 3
         entrypoint:
           - /platform/groundcontrol
-          - /platform/artisan-schedule.toml
+          - /platform/worker-queue.toml
 
 ```
 
@@ -182,7 +184,7 @@ Run the artisan scheduler from a cron job.
 ```Dockerfile
 FROM hardened-php-nginx
 
-ADD worker-queue.toml  /platform/artisan-scheduler.toml
+ADD artisan-scheduler.toml  /platform/artisan-scheduler.toml
 ENTRYPOINT ["/platform/groundcontrol", "/platform/artisan-scheduler.toml"]
 ```
 
