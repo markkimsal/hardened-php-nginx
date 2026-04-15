@@ -52,7 +52,7 @@ function extension_deps() {
 	global $versions;
 	global $variant;
 	$libdir = "/lib/x86_64-linux-gnu/";
-	if (str_contains($variant, 'apline')) {
+	if (str_contains($variant, 'alpine')) {
 		$libdir = "/usr/lib/";
 	}
 	echo implode(" \\\n    ", array_map(function($lib) use ($libdir) {
