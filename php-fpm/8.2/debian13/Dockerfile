@@ -129,6 +129,18 @@ RUN mkdir -p /run/nginx /run/php-fpm
 RUN echo "nonroot:x:${GID}:nonroot\nshadow:x:42:\nnobody:x:65534:" >> /etc/prod-group
 RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/sh" >> /etc/prod-passwd
 
+# cron / supercronic
+
+# Latest releases available at https://github.com/aptible/supercronic/releases
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.44/supercronic-linux-amd64 \
+    SUPERCRONIC_SHA1SUM=6eb0a8e1e6673675dc67668c1a9b6409f79c37bc \
+    SUPERCRONIC=supercronic-linux-amd64
+
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" "/usr/bin/supercronic"
+
 # Nginx Builder
 # ===========
 # nginx-builder stage for nginx-deps.tar
@@ -172,10 +184,11 @@ COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 
-#cron
-COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
-COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
-COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
+# cron / supercronic
+COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
+# COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
+# COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
+# COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY prebuildfs /
 COPY appbuildfs /
@@ -241,10 +254,11 @@ COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
-#cron
-COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
-COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
-COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
+# cron / supercronic
+COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
+# COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
+# COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
+# COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY approotfs /
 

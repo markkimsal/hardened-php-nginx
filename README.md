@@ -6,7 +6,7 @@ One image for your local, CI, and prod environments.  One image for your FPM, sc
 
 Items this project adds to the dhi.io hardened `*-fpm` image:
   * nginx
-  * cron
+  * supercronic (container ready cron alternative)
   * php (cli sapi)
   * various php extensions
 
@@ -32,7 +32,7 @@ The hardened production image `*-fpm` contains no shell,so you will be unable to
 | php-fpm              | X                   |  X                 | X                       | X               |
 | php (cli)            | X                   |                    | X                       | X               |
 | nginx                | X                   |                    | X                       |                 |
-| cron (\*)            | X                   |                    | X                       |                 |
+| supercronic          | X                   |                    | X                       |                 |
 | composer             |                     |                    | X                       |                 |
 | git                  |                     |                    | X                       |                 |
 | jq                   |                     |                    | X                       |                 |
@@ -68,8 +68,6 @@ Extensions built
 
 🚀 - built and enabled by default
 ✅ - built, but not enabled
-
-\* Cron is available on all alpine image variants because it is part of busybox
 
 
 UID/GID differences from dhi.io images
@@ -179,7 +177,7 @@ services:
 
 Run artisan scheduler
 ---
-Run the artisan scheduler from a cron job.
+Run the artisan scheduler from a crontab file.
 
 ```Dockerfile
 FROM hardened-php-nginx
@@ -192,17 +190,13 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/artisan-scheduler.toml"]
 
 ```toml
 [[processes]]
-name = "setup-cron"
-pre = ["php",  "-r", "file_put_contents('/etc/cron.d/laravel-artisan-schedule-run', '* * * * * nonroot {{CRON_COMMAND}} >> /dev/null 2>&1');\n" ]
-
-[[processes]]
 name = "cron"
-run = ["/usr/bin/cron", "-f"]
+run = ["/usr/bin/supercronic", "/platform/my-scheduled.crontab"]
 ```
 
 Docker cli command
 ```
-docker run -e "CRON_COMMAND=/opt/php/bin/php artisan schedule:run" ...
+docker run -v $(pwd)/my-scheduled.crontab:/platform/my-scheduled.crontab  artisan schedule:run" ...
 ```
 
 Docker compose file:
@@ -210,11 +204,11 @@ Docker compose file:
 services:
     scheduler:
         image: your-app:latest
-        environment:
-          CRON_COMMAND: /opt/php/bin/php artisan schedule:run
         entrypoint:
           - /platform/groundcontrol
           - /platform/artisan-schedule.toml
+        volumes:
+          - ./my-scheduled.crontab:/platform/my-scheduled.crontab
 
 ```
 

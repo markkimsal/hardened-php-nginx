@@ -21,6 +21,8 @@ RUN /usr/sbin/install_packages \
     libffi-dev \
     libzip-dev \
     libzip \
+    zlib \
+    zlib-dev \
     bash \
     pcre2-dev \
     musl \
@@ -94,6 +96,18 @@ RUN mkdir -p /run/nginx /run/php-fpm
 RUN echo "nonroot:x:${GID}:nonroot\nshadow:x:42:\nnobody:x:65534:" >> /etc/prod-group
 RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/sh" >> /etc/prod-passwd
 
+# cron / supercronic
+
+# Latest releases available at https://github.com/aptible/supercronic/releases
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.44/supercronic-linux-amd64 \
+    SUPERCRONIC_SHA1SUM=6eb0a8e1e6673675dc67668c1a9b6409f79c37bc \
+    SUPERCRONIC=supercronic-linux-amd64
+
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" "/usr/bin/supercronic"
+
 # Nginx Builder
 # ===========
 # nginx-builder stage for nginx-deps.tar
@@ -119,19 +133,18 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
-COPY --from=builder /lib/x86_64-linux-gnu/libffi.so.8 \
-    /lib/x86_64-linux-gnu/libz.so.1 \
-    /lib/x86_64-linux-gnu/libzip.so.5 \
-    /lib/x86_64-linux-gnu/libffi.so.8 \
-    /lib/x86_64-linux-gnu/libgcc_s.so.1 \
-    /lib/x86_64-linux-gnu/libz.so.1 \
-    /lib/x86_64-linux-gnu/libzip.so.5 \
-    /lib/x86_64-linux-gnu/libbz2.so.1 \
-    /lib/x86_64-linux-gnu/liblzma.so.5 \
-    /lib/x86_64-linux-gnu/libzstd.so.1 \
-    /lib/x86_64-linux-gnu/libcrypto.so.3 \
-    /lib/x86_64-linux-gnu/libz.so.1 \
-    /lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/libffi.so.8 \
+    /usr/lib/libz.so.1 \
+    /usr/lib/libzip.so.5 \
+    /usr/lib/libgcc_s.so.1 \
+    /usr/lib/libz.so.1 \
+    /usr/lib/libzip.so.5 \
+    /usr/lib/libbz2.so.1 \
+    /usr/lib/liblzma.so.5 \
+    /usr/lib/libzstd.so.1 \
+    /usr/lib/libcrypto.so.3 \
+    /usr/lib/libz.so.1 \
+    /usr/lib/
 COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
 COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.d /opt/php-8.2/etc/php-fpm.d
@@ -139,6 +152,11 @@ COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 
+# cron / supercronic
+COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
+# COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
+# COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
+# COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY prebuildfs /
 COPY appbuildfs /
@@ -192,6 +210,11 @@ COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
+# cron / supercronic
+COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
+# COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
+# COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
+# COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY approotfs /
 
