@@ -246,18 +246,25 @@ this project directly and incorporate your changes from the start.
 export platform=debian13
 export phpversion=8.3
 
-docker build --target=prod-image -t hardened-php-nginx:${phpversion}-${platform}-fpm php-fpm/${phpversion}/${platform}/
+docker build --target=prod-image \
+  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+  -t hardened-php-nginx:${phpversion}-${platform}-fpm php-fpm/${phpversion}/${platform}/
 
-docker build --target=dev-image --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t hardened-php-nginx:${phpversion}-${platform}-dev php-fpm/${phpversion}/${platform}/
+docker build --target=dev-image \
+  --build-arg UID=$(id -u) \
+  --build-arg GID=$(id -g) \
+  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+  -t hardened-php-nginx:${phpversion}-${platform}-dev php-fpm/${phpversion}/${platform}/
 ```
 
 Process to updated extension dependencies JSON
 ```
 export platform=apline3.22
+export phpversion=8.3
 
-docker build --target=builder --progress=plain -t hardened-php-nginx:8.3-${platform}-builder -f php-fpm/8.3/${platform}/Dockerfile php-fpm/8.3/${platform}/
+docker build --target=builder --progress=plain -t hardened-php-nginx:${phpversion}-${platform}-builder -f php-fpm/${phpversion}/${platform}/Dockerfile php-fpm/${phpversion}/${platform}/
 
-docker run --name=builder hardened-php-nginx:8.3-${platform}-builder
+docker run --name=builder hardened-php-nginx:${phpversion}-${platform}-builder
 
 docker cp builder:/php-ext-deps.txt ./php-ext-deps.txt
 
