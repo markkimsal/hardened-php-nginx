@@ -4,7 +4,7 @@ $versions = json_decode(file_get_contents("versions.json"), true);
 foreach ($versions['versions'] as $majorVersion => $definition) {
 	//mkdir('php-fpm/' . $majorVersion);
 	foreach($definition['variants'] as $variant) {
-		echo "generating $majorVersion/$variant\n";
+		echo "generating " . $definition['version'] . " in $majorVersion/$variant\n";
 		$finalDir = 'php-fpm/' . $majorVersion . '/' . $variant;
 		if(!is_dir($finalDir)) {
 			mkdir($finalDir, 0775, true);

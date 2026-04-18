@@ -88,7 +88,6 @@ RUN \
     echo "found extension dependencies: "; \
     cat  /php-ext-deps.txt;
 
-RUN mkdir -p /run/nginx /run/php-fpm
 
 # build-arg interpolation _requires_ a shell, no matter what docker build logs shows you
 # (when RUN is used with exec style, JSON style params)
@@ -113,7 +112,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
 # nginx-builder stage for nginx-deps.tar
 FROM dhi.io/nginx:1-alpine3.22-dev AS nginx-builder
 
-# Dev-Image
+# Dev Image
 # ===========
 # dev-image stage
 FROM dhi.io/php:8.3.30-alpine3.22-dev AS dev-image
@@ -127,8 +126,6 @@ RUN chown ${UID}:${GID} /home/nonroot
 ### Ground Control
 COPY --from=builder /opt/php-8.3/lib /opt/php-8.3/lib
 COPY --from=builder /opt/php-8.3/etc /opt/php-8.3/etc
-COPY --from=builder /run /run
-RUN ls -alh /run
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
@@ -160,7 +157,7 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 
 COPY prebuildfs /
 COPY appbuildfs /
-COPY approotfs /
+COPY --chown=nonroot:nonroot approotfs /
 
 #install tools for CI / local dev: git, jq, ps, ssh, etc
 RUN /usr/sbin/install_packages \
@@ -176,6 +173,7 @@ RUN /usr/sbin/install_packages \
 #install composer
 RUN /platform/docker-composer-install
 
+USER nonroot
 WORKDIR "/app"
 ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
@@ -202,8 +200,6 @@ COPY --from=builder /etc/prod-group  /etc/group
 
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
-COPY --chown=nonroot:nonroot --from=builder /run /run
-COPY --chown=nonroot:nonroot --from=builder /run /var/run
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
@@ -216,7 +212,8 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 # COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
 # COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
-COPY approotfs /
+COPY --chown=nonroot:nonroot approotfs /
 
+USER nonroot
 WORKDIR "/app"
 ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
