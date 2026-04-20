@@ -17,7 +17,9 @@ COPY prebuildfs /
 
 # Install required system packages and dependencies
 <?php if (str_contains($versionTag, 'debian')): ?>
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apt \
+  --mount=type=cache,target=/var/lib/apt/lists \
+  /usr/sbin/install_packages \
     <?php builder_deps('debian13'); ?>
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
@@ -28,7 +30,8 @@ RUN export LC_ALL=C.utf8
 <?php endif; ?>
 
 <?php if (str_contains($versionTag, 'alpine')): ?>
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apk \
+    /usr/sbin/install_packages \
     <?php builder_deps('alpine3.22'); ?>
 <?php endif; ?>
 
@@ -154,7 +157,10 @@ COPY appbuildfs /
 COPY --chown=nonroot:nonroot approotfs /
 
 #install tools for CI / local dev: git, jq, ps, ssh, etc
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apt \
+  --mount=type=cache,target=/var/lib/apt/lists \
+  --mount=type=cache,target=/var/cache/apk \
+  /usr/sbin/install_packages \
   git \
   jq \
   openssh-client \

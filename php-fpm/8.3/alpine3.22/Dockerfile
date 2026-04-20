@@ -17,7 +17,8 @@ COPY prebuildfs /
 
 # Install required system packages and dependencies
 
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apk \
+    /usr/sbin/install_packages \
     libffi-dev \
     libzip-dev \
     libzip \
@@ -160,7 +161,10 @@ COPY appbuildfs /
 COPY --chown=nonroot:nonroot approotfs /
 
 #install tools for CI / local dev: git, jq, ps, ssh, etc
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apt \
+  --mount=type=cache,target=/var/lib/apt/lists \
+  --mount=type=cache,target=/var/cache/apk \
+  /usr/sbin/install_packages \
   git \
   jq \
   openssh-client \

@@ -28,5 +28,5 @@ fi
 if [ $pm == 'apk' ]; then
 	echo "Installing $ARGS"
 	apk update \
-	&& apk add --no-cache $ARGS
+	&& apk add $ARGS
 fi
