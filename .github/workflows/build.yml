@@ -29,6 +29,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          platforms: linux/amd64,linux/arm64
 
       - name: Build prod
         uses: docker/build-push-action@v7
@@ -36,7 +38,8 @@ jobs:
           cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
+          load: true
           target: prod-image
           pull: true
           push: true
@@ -50,8 +53,9 @@ jobs:
           cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
           target: dev-image
+          load: true
           pull: true
           push: true
           build-args: |
