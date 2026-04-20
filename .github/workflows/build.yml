@@ -38,7 +38,6 @@ jobs:
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           platforms: linux/amd64,linux/arm64
           target: prod-image
-          load: true
           pull: true
           push: true
           tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-fpm
@@ -53,7 +52,6 @@ jobs:
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           platforms: linux/amd64,linux/arm64
           target: dev-image
-          load: true
           pull: true
           push: true
           build-args: |
