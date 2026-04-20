@@ -31,10 +31,11 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
-          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }},mode=max
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           platforms: linux/amd64,linux/arm64
           target: prod-image
+          load: true
           pull: true
           push: true
           tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-fpm
@@ -45,10 +46,11 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
-          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }},mode=max
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           platforms: linux/amd64,linux/arm64
           target: dev-image
+          load: true
           pull: true
           push: true
           build-args: |
