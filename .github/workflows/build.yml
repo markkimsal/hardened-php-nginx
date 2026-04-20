@@ -27,12 +27,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build and push
+      - name: Build prod
         uses: docker/build-push-action@v7
         with:
-          context: .
-          platform: linux/amd64,linux/arm64
+          context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64
+          target: prod-image
           push: true
-          tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}
+          tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-fpm
+          labels: |
+            org.opencontainer.image.created=${{ env.datetime }}
+
+      - name: Build dev
+        uses: docker/build-push-action@v7
+        with:
+          context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64
+          target: dev-image
+          push: true
+          tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-dev
           labels: |
             org.opencontainer.image.created=${{ env.datetime }}
