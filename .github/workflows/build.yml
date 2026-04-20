@@ -30,6 +30,8 @@ jobs:
       - name: Build prod
         uses: docker/build-push-action@v7
         with:
+          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.platform }}
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.platform }},mode=max 
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           platforms: linux/amd64,linux/arm64
           target: prod-image
@@ -42,11 +44,16 @@ jobs:
       - name: Build dev
         uses: docker/build-push-action@v7
         with:
+          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.platform }}
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.platform }},mode=max 
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           platforms: linux/amd64,linux/arm64
           target: dev-image
           pull: true
           push: true
+          build-args: |
+            UID=1000
+            GID=1000
           tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-dev
           labels: |
             org.opencontainer.image.created=${{ env.datetime }}
