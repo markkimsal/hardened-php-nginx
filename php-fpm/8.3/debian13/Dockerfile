@@ -16,7 +16,9 @@ LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-ngin
 COPY prebuildfs /
 
 # Install required system packages and dependencies
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apt \
+  --mount=type=cache,target=/var/lib/apt/lists \
+  /usr/sbin/install_packages \
     ca-certificates \
     curl \
     git \
@@ -192,7 +194,10 @@ COPY appbuildfs /
 COPY --chown=nonroot:nonroot approotfs /
 
 #install tools for CI / local dev: git, jq, ps, ssh, etc
-RUN /usr/sbin/install_packages \
+RUN --mount=type=cache,target=/var/cache/apt \
+  --mount=type=cache,target=/var/lib/apt/lists \
+  --mount=type=cache,target=/var/cache/apk \
+  /usr/sbin/install_packages \
   git \
   jq \
   openssh-client \
