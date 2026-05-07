@@ -155,10 +155,9 @@ ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
 RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/group
-RUN chown ${UID}:${GID} /home/nonroot
+RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 
 # Copy binaries, scripts, and config.
-### Ground Control
 COPY --from=builder /opt/php-8.3/lib /opt/php-8.3/lib
 COPY --from=builder /opt/php-8.3/etc /opt/php-8.3/etc
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
@@ -179,9 +178,9 @@ COPY --from=builder /lib/x86_64-linux-gnu/libcrypt.so.1 \
 COPY --from=prod-builder /opt/php-8.3/sbin/php-fpm /opt/php-8.3/sbin/php-fpm
 COPY --from=prod-builder /opt/php-8.3/etc/php-fpm.conf /opt/php-8.3/etc/php-fpm.conf
 COPY --from=prod-builder /opt/php-8.3/etc/php-fpm.d /opt/php-8.3/etc/php-fpm.d
+
+### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
-COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
-COPY --from=nginx-builder /etc/nginx /etc/nginx
 
 # cron / supercronic
 COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
