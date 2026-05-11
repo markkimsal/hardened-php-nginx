@@ -3,8 +3,8 @@ ARG GID=33
 ARG WITH_OPENSWOOLE=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:8.4.20-debian13-fpm AS prod-builder
-FROM dhi.io/php:8.4.20-debian13-dev AS builder
+FROM dhi.io/php:8.4.21-debian13-fpm AS prod-builder
+FROM dhi.io/php:8.4.21-debian13-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
@@ -150,7 +150,7 @@ FROM dhi.io/nginx:1-debian13-dev AS nginx-builder
 # Dev Image
 # ===========
 # dev-image stage
-FROM dhi.io/php:8.4.20-debian13-dev AS dev-image
+FROM dhi.io/php:8.4.21-debian13-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
@@ -215,7 +215,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 # Prod Image
 # ===========
-FROM dhi.io/php:8.4.20-debian13-fpm AS prod-image
+FROM dhi.io/php:8.4.21-debian13-fpm AS prod-image
 ARG UID
 ARG GID
 
