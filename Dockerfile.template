@@ -72,6 +72,7 @@ done
 RUN pecl_extensions=( \
   "xdebug" \
   "redis" \
+  "protobuf-5.34.1" \
 ); \
 for component in "${pecl_extensions[@]}"; do \
   pecl install ${component}; \

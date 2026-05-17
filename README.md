@@ -259,8 +259,8 @@ docker build --target=dev-image \
 
 Process to updated extension dependencies JSON
 ```
-export platform=apline3.22
-export phpversion=8.3
+export platform=alpine3.22
+export phpversion=8.4
 
 docker build --target=builder --progress=plain -t hardened-php-nginx:${phpversion}-${platform}-builder -f php-fpm/${phpversion}/${platform}/Dockerfile php-fpm/${phpversion}/${platform}/
 
