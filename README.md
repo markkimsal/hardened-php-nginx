@@ -5,6 +5,7 @@ Image that combines nginx with dhi.io hardened PHP.  Uses groundcontrol to manag
 One image for your local, CI, and prod environments.  One image for your FPM, scheduler, worker instances.
 
 Items this project adds to the dhi.io hardened `*-fpm` image:
+  * dash
   * nginx
   * supercronic (container ready cron alternative)
   * php (cli sapi)
@@ -25,7 +26,8 @@ Items this project adds to the dhi.io hardened `*-dev` image:
 
 This project's `*-dev` image is meant to be used as a local development image AND as a CI/CD pipeline image.
 
-The hardened production image `*-fpm` contains no shell,so you will be unable to run artisan commands on production without some extra steps.
+The hardened production image `*-fpm` contains dash as shell, `supercronic` and `artisan schedule:work` both require `/bin/sh` to operate.
+
 
 |                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
 |----------------------|---------------------|--------------------|-------------------------|-----------------|
@@ -44,17 +46,18 @@ The hardened production image `*-fpm` contains no shell,so you will be unable to
 
 
 Extensions built
-|                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
-|----------------------|---------------------|--------------------|-------------------------|-----------------|
+|                      | hardened/fpm (prod)  | dhi.io/fpm (prod)   | hardened/dev (ci/local)  | dhi.io/dev       |
+|----------------------|----------------------|---------------------|--------------------------|------------------|
 | BCMATH               | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | Intl                 | 🚀                   |  🚀                 | 🚀                       | 🚀               |
-| cur                  | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| curl                 | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | dom                  | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | libxml               | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | mbstring             | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | mysqlnd              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | opcache              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | openssl              | 🚀                   |  🚀                 | 🚀                       | 🚀               |
+| protobuf             | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | sqlite3 (PDO)        | 🚀                   |  🚀                 | 🚀                       | 🚀               |
 | ZIP                  | 🚀                   |                     | 🚀                       |                  |
 | mysql (PDO)          | 🚀                   |                     | 🚀                       |                  |

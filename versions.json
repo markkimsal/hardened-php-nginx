@@ -26,6 +26,7 @@
 		"debian13": [
 			"ca-certificates",
 			"curl",
+			"dash",
 			"git",
 			"krb5-user",
 			"libbz2-1.0",

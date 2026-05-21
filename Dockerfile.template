@@ -161,6 +161,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   --mount=type=cache,target=/var/cache/apk \
   /usr/sbin/install_packages \
+  dash \
   git \
   jq \
   openssh-client \
@@ -219,6 +220,10 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 # COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
 # COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
 # COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
+
+<?php if (str_contains($versionTag, 'debian')): ?>
+COPY --chown=nonroot:nonroot --from=builder /usr/bin/dash /bin/sh
+<?php endif; ?>
 
 COPY --chown=nonroot:nonroot approotfs /
 

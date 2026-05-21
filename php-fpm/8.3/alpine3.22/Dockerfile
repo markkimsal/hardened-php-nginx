@@ -132,10 +132,7 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/ng
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/lib/libffi.so.8 \
-    /usr/lib/libz.so.1 \
-    /usr/lib/libzip.so.5 \
     /usr/lib/libgcc_s.so.1 \
-    /usr/lib/libz.so.1 \
     /usr/lib/libzip.so.5 \
     /usr/lib/libbz2.so.1 \
     /usr/lib/liblzma.so.5 \
@@ -165,6 +162,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   --mount=type=cache,target=/var/cache/apk \
   /usr/sbin/install_packages \
+  dash \
   git \
   jq \
   openssh-client \
@@ -215,6 +213,7 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 # COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
 # COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
 # COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
+
 
 COPY --chown=nonroot:nonroot approotfs /
 
