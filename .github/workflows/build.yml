@@ -2,6 +2,7 @@ name: push-docker-images
 
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   docker:
