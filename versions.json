@@ -27,6 +27,8 @@
 			"ca-certificates",
 			"curl",
 			"dash",
+			"gcc",
+			"g++",
 			"git",
 			"krb5-user",
 			"libbz2-1.0",
@@ -68,7 +70,7 @@
 			"libzip",
 			"zlib",
 			"zlib-dev",
-			"bash", 
+			"bash",
 			"pcre2-dev",
 			"musl",
 			"musl-utils"

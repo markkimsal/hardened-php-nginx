@@ -24,6 +24,8 @@ RUN --mount=type=cache,target=/var/cache/apt \
     ca-certificates \
     curl \
     dash \
+    gcc \
+    g++ \
     git \
     krb5-user \
     libbz2-1.0 \
