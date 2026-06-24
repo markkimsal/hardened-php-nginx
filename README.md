@@ -67,6 +67,9 @@ Extensions built
 | Xdebug               | ✅                   |                     | ✅                       |                  |
 | Redis                | ✅                   |                     | ✅                       |                  |
 | sysvshm              | ✅                   |                     | ✅                       |                  |
+| grpc                 | ✅                   |                     | ✅                       |                  |
+| protobuf             | ✅                   |                     | ✅                       |                  |
+| opentelemetry        | ✅                   |                     | ✅                       |                  |
 
 
 🚀 - built and enabled by default
@@ -247,16 +250,18 @@ this project directly and incorporate your changes from the start.
 
 ```
 export platform=debian13
-export phpversion=8.3
+export phpversion=8.4
 
 docker build --target=prod-image \
-  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+  --build-arg WITH_OPENSWOOLE=1 \
+  --build-arg WITH_OTEL=1 \
   -t hardened-php-nginx:${phpversion}-${platform}-fpm php-fpm/${phpversion}/${platform}/
 
 docker build --target=dev-image \
   --build-arg UID=$(id -u) \
   --build-arg GID=$(id -g) \
-  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+  --build-arg WITH_OPENSWOOLE=1 \
+  --build-arg WITH_OTEL=1 \
   -t hardened-php-nginx:${phpversion}-${platform}-dev php-fpm/${phpversion}/${platform}/
 ```
 

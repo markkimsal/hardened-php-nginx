@@ -36,6 +36,9 @@ jobs:
           cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
           cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }},mode=max
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
+          build-args: |
+            WITH_OPENSWOOLE=1
+            WITH_OTEL=1
           # platforms: linux/amd64,linux/arm64
           load: true
           target: prod-image
@@ -57,6 +60,8 @@ jobs:
           pull: true
           push: true
           build-args: |
+            WITH_OPENSWOOLE=1
+            WITH_OTEL=1
             UID=1000
             GID=1000
           tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-dev

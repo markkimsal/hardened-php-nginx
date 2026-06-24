@@ -1,6 +1,7 @@
 ARG UID=33
 ARG GID=33
 ARG WITH_OPENSWOOLE=0
+ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
 FROM dhi.io/php:8.2.31-alpine3.22-fpm AS prod-builder
@@ -8,6 +9,7 @@ FROM dhi.io/php:8.2.31-alpine3.22-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
+ARG WITH_OTEL
 
 LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-nginx:8.2" \
       org.opencontainers.image.description="PHP-FPM, Nginx, groundcontrol" \
@@ -64,13 +66,21 @@ for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
 done
 
 RUN pecl_extensions=( \
+  "grpc-1.81.0" \
   "xdebug" \
   "redis" \
-  "protobuf-5.34.1" \
+  "protobuf-5.35.1" \
 ); \
 for component in "${pecl_extensions[@]}"; do \
   pecl install ${component}; \
 done
+
+# OPENTELEMETRY
+RUN set -ex \
+    &&  if [ "$WITH_OTEL" -ne "0" ] ; then \
+        pecl install opentelemetry; \
+    fi
+
 
 # SWOOLE
 RUN set -ex \
