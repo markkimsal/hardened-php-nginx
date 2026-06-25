@@ -122,7 +122,7 @@ RUN set -ex \
 # SWOOLE
 RUN set -ex \
     &&  if [ "$WITH_OPENSWOOLE" -ne "0" ] ; then \
-        pecl install openswoole; \
+        pecl install openswoole-25.2.0; \
     	  bash /platform/docker-php-ext-enable openswoole ; \
     fi
 

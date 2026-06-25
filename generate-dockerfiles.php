@@ -16,7 +16,7 @@ foreach ($versions['versions'] as $majorVersion => $definition) {
 		$templatedDockerfile = ob_get_contents();
 	    ob_end_clean();
 		file_put_contents($finalDir . '/Dockerfile', $templatedDockerfile);
-		
+
 		#copy fs foldes
 		`cp -r .templatefs/* $finalDir/`;
 		// $fsdir = new RecursiveDirectoryIterator(".templatefs");
@@ -58,4 +58,12 @@ function extension_deps() {
 	echo implode(" \\\n    ", array_map(function($lib) use ($libdir) {
 		return $libdir.$lib;
 	}, $versions['extension_deps'][$variant])) . " \\\n    " .$libdir;
+}
+
+function openswoole_version(): string {
+	global $majorVersion;
+	if (str_contains($majorVersion, '8.2')) {
+		return 'openswoole-25.2.0';
+	}
+	return 'openswoole';
 }
