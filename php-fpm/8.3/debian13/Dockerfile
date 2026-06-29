@@ -38,6 +38,10 @@ RUN --mount=type=cache,target=/var/cache/apt \
     libnettle8 \
     libnsl2 \
     libp11-kit0 \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libwebp-dev \
     libreadline8 \
     libsasl2-2 \
     libsasl2-modules \
@@ -73,6 +77,7 @@ SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 COPY appbuildfs /
 
 RUN DOCKER_EXTENSIONS=( \
+  "gd --with-freetype --with-jpeg --with-webp" \
   "bcmath" \
   "ffi" \
   "mysqli" \
@@ -102,22 +107,27 @@ for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
     bash ./docker-php-ext-enable ${COMPONENT} ; \
 done
 
-RUN pecl_extensions=( \
-  "grpc-1.81.0" \
-  "xdebug" \
-  "redis" \
-  "protobuf-5.35.1" \
-); \
-for component in "${pecl_extensions[@]}"; do \
-  pecl install ${component}; \
-done
+# RUN pecl_extensions=( \
+#   "xdebug" \
+#   "redis" \
+# ); \
+# for component in "${pecl_extensions[@]}"; do \
+#   pecl install ${component}; \
+# done
+
+# # GRPC
+# RUN set -ex \
+#     pecl install grpc-1.81.0;
+
+# # PROTOBUF
+# RUN set -ex \
+#     pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
     &&  if [ "$WITH_OTEL" -ne "0" ] ; then \
         pecl install opentelemetry; \
     fi
-
 
 # SWOOLE
 RUN set -ex \
@@ -182,9 +192,14 @@ COPY --from=builder /lib/x86_64-linux-gnu/libcrypt.so.1 \
     /lib/x86_64-linux-gnu/libgcc_s.so.1 \
     /lib/x86_64-linux-gnu/libzip.so.5 \
     /lib/x86_64-linux-gnu/libffi.so.8 \
+    /lib/x86_64-linux-gnu/libfreetype.so.6 \
     /lib/x86_64-linux-gnu/libm.so.6 \
     /lib/x86_64-linux-gnu/libbz2.so.1.0 \
     /lib/x86_64-linux-gnu/liblzma.so.5 \
+    /lib/x86_64-linux-gnu/libjpeg.so.62 \
+    /lib/x86_64-linux-gnu/libpng16.so.16 \
+    /lib/x86_64-linux-gnu/libsharpyuv.so.0 \
+    /lib/x86_64-linux-gnu/libwebp.so.7 \
     /lib/x86_64-linux-gnu/libzstd.so.1 \
     /lib/x86_64-linux-gnu/libcrypto.so.3 \
     /lib/x86_64-linux-gnu/libz.so.1 \
@@ -247,9 +262,14 @@ COPY --from=builder /lib/x86_64-linux-gnu/libcrypt.so.1 \
     /lib/x86_64-linux-gnu/libgcc_s.so.1 \
     /lib/x86_64-linux-gnu/libzip.so.5 \
     /lib/x86_64-linux-gnu/libffi.so.8 \
+    /lib/x86_64-linux-gnu/libfreetype.so.6 \
     /lib/x86_64-linux-gnu/libm.so.6 \
     /lib/x86_64-linux-gnu/libbz2.so.1.0 \
     /lib/x86_64-linux-gnu/liblzma.so.5 \
+    /lib/x86_64-linux-gnu/libjpeg.so.62 \
+    /lib/x86_64-linux-gnu/libpng16.so.16 \
+    /lib/x86_64-linux-gnu/libsharpyuv.so.0 \
+    /lib/x86_64-linux-gnu/libwebp.so.7 \
     /lib/x86_64-linux-gnu/libzstd.so.1 \
     /lib/x86_64-linux-gnu/libcrypto.so.3 \
     /lib/x86_64-linux-gnu/libz.so.1 \
@@ -276,6 +296,7 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 # COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY --chown=nonroot:nonroot --from=builder /usr/bin/dash /bin/sh
+
 
 COPY --chown=nonroot:nonroot approotfs /
 

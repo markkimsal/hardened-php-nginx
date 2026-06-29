@@ -4,7 +4,8 @@ popDir="$PWD"
 cd "$EXT"
 ls -alh
 phpize
-./configure --enable-option-checking=fatal
+shift
+./configure --enable-option-checking=fatal $@
 make -j2
 make -j2 install
 make -j2 clean

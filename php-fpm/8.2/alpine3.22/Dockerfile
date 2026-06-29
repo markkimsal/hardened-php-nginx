@@ -21,9 +21,16 @@ COPY prebuildfs /
 
 RUN --mount=type=cache,target=/var/cache/apk \
     /usr/sbin/install_packages \
+    busybox \
     libffi-dev \
     libzip-dev \
     libzip \
+    libpng-dev \
+    jpeg \
+    jpeg-dev \
+    freetype \
+    freetype-dev \
+    libwebp-dev \
     zlib \
     zlib-dev \
     bash \
@@ -36,6 +43,7 @@ SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 COPY appbuildfs /
 
 RUN DOCKER_EXTENSIONS=( \
+  "gd --with-freetype --with-jpeg --with-webp" \
   "bcmath" \
   "ffi" \
   "mysqli" \
@@ -65,22 +73,27 @@ for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
     bash ./docker-php-ext-enable ${COMPONENT} ; \
 done
 
-RUN pecl_extensions=( \
-  "grpc-1.81.0" \
-  "xdebug" \
-  "redis" \
-  "protobuf-5.35.1" \
-); \
-for component in "${pecl_extensions[@]}"; do \
-  pecl install ${component}; \
-done
+# RUN pecl_extensions=( \
+#   "xdebug" \
+#   "redis" \
+# ); \
+# for component in "${pecl_extensions[@]}"; do \
+#   pecl install ${component}; \
+# done
+
+# # GRPC
+# RUN set -ex \
+#     pecl install grpc-1.81.0;
+
+# # PROTOBUF
+# RUN set -ex \
+#     pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
     &&  if [ "$WITH_OTEL" -ne "0" ] ; then \
         pecl install opentelemetry; \
     fi
-
 
 # SWOOLE
 RUN set -ex \
@@ -145,7 +158,12 @@ COPY --from=builder /usr/lib/libffi.so.8 \
     /usr/lib/libgcc_s.so.1 \
     /usr/lib/libzip.so.5 \
     /usr/lib/libbz2.so.1 \
+    /usr/lib/libfreetype.so.6 \
     /usr/lib/liblzma.so.5 \
+    /usr/lib/libjpeg.so.8 \
+    /usr/lib/libpng16.so.16 \
+    /usr/lib/libsharpyuv.so.0 \
+    /usr/lib/libwebp.so.7 \
     /usr/lib/libzstd.so.1 \
     /usr/lib/libcrypto.so.3 \
     /usr/lib/libz.so.1 \
@@ -223,6 +241,8 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 # COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
 # COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
 # COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
+
+COPY --chown=nonroot:nonroot --from=builder /bin/busybox /bin/sh
 
 
 COPY --chown=nonroot:nonroot approotfs /

@@ -42,6 +42,7 @@ SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 COPY appbuildfs /
 
 RUN DOCKER_EXTENSIONS=( \
+  "gd --with-freetype --with-jpeg --with-webp" \
   "bcmath" \
   "ffi" \
   "mysqli" \
@@ -71,22 +72,27 @@ for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
     bash ./docker-php-ext-enable ${COMPONENT} ; \
 done
 
-RUN pecl_extensions=( \
-  "grpc-1.81.0" \
-  "xdebug" \
-  "redis" \
-  "protobuf-5.35.1" \
-); \
-for component in "${pecl_extensions[@]}"; do \
-  pecl install ${component}; \
-done
+# RUN pecl_extensions=( \
+#   "xdebug" \
+#   "redis" \
+# ); \
+# for component in "${pecl_extensions[@]}"; do \
+#   pecl install ${component}; \
+# done
+
+# # GRPC
+# RUN set -ex \
+#     pecl install grpc-1.81.0;
+
+# # PROTOBUF
+# RUN set -ex \
+#     pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
     &&  if [ "$WITH_OTEL" -ne "0" ] ; then \
         pecl install opentelemetry; \
     fi
-
 
 # SWOOLE
 RUN set -ex \
@@ -234,6 +240,10 @@ COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/superc
 <?php if (str_contains($versionTag, 'debian')): ?>
 COPY --chown=nonroot:nonroot --from=builder /usr/bin/dash /bin/sh
 <?php endif; ?>
+<?php if (str_contains($versionTag, 'alpine')): ?>
+COPY --chown=nonroot:nonroot --from=builder /bin/busybox /bin/sh
+<?php endif; ?>
+
 
 COPY --chown=nonroot:nonroot approotfs /
 
