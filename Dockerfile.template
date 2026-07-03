@@ -72,21 +72,21 @@ for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
     bash ./docker-php-ext-enable ${COMPONENT} ; \
 done
 
-# RUN pecl_extensions=( \
-#   "xdebug" \
-#   "redis" \
-# ); \
-# for component in "${pecl_extensions[@]}"; do \
-#   pecl install ${component}; \
-# done
+RUN pecl_extensions=( \
+  "xdebug" \
+  "redis" \
+); \
+for component in "${pecl_extensions[@]}"; do \
+  pecl install ${component}; \
+done
 
-# # GRPC
-# RUN set -ex \
-#     pecl install grpc-1.81.0;
+# GRPC
+RUN set -ex \
+    pecl install grpc-1.81.0;
 
-# # PROTOBUF
-# RUN set -ex \
-#     pecl install protobuf-5.35.1;
+# PROTOBUF
+RUN set -ex \
+    pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
