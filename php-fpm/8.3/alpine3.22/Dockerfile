@@ -157,14 +157,11 @@ COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/lib/libffi.so.8 \
     /usr/lib/libgcc_s.so.1 \
     /usr/lib/libzip.so.5 \
-    /usr/lib/libbz2.so.1 \
     /usr/lib/libfreetype.so.6 \
-    /usr/lib/liblzma.so.5 \
     /usr/lib/libjpeg.so.8 \
     /usr/lib/libpng16.so.16 \
     /usr/lib/libsharpyuv.so.0 \
     /usr/lib/libwebp.so.7 \
-    /usr/lib/libzstd.so.1 \
     /usr/lib/libcrypto.so.3 \
     /usr/lib/libz.so.1 \
     /usr/lib/

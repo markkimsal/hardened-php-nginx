@@ -19,7 +19,7 @@ if [ $pm == 'dpkg' ]; then
 
 	echo "Installing $ARGS"
 
-	apt-get -q update && apt --fix-broken install -y && apt-get -qy install $NO_RECOMMENDS $ARGS \
+	apt-get -q update && apt-get -qy install $NO_RECOMMENDS $ARGS \
 		&& apt-get -qy autoremove \
 		&& apt-get clean \
 		&& rm -r /var/lib/apt/lists/*
