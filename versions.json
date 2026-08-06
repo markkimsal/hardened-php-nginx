@@ -1,21 +1,21 @@
 {
 	"versions": {
 		"8.2": {
-			"version": "8.2.32",
+			"version": "8.2.33",
 			"variants": [
 				"debian13",
 				"alpine3.22"
 			]
 		},
 		"8.3": {
-			"version": "8.3.32",
+			"version": "8.3.33",
 			"variants": [
 				"debian13",
 				"alpine3.22"
 			]
 		},
 		"8.4": {
-			"version": "8.4.23",
+			"version": "8.4.24",
 			"variants": [
 				"debian13",
 				"alpine3.22"
@@ -24,11 +24,10 @@
 	},
 	"builder_deps": {
 		"debian13": [
-			"ca-certificates",
-			"curl",
 			"dash",
 			"git",
 			"krb5-user",
+			"libc-l10n",
 			"libbz2-1.0",
 			"libcom-err2",
 			"libcrypt1",

@@ -4,8 +4,8 @@ ARG WITH_OPENSWOOLE=0
 ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:8.2.32-debian13-fpm AS prod-builder
-FROM dhi.io/php:8.2.32-debian13-dev AS builder
+FROM dhi.io/php:8.2.33-debian13-fpm AS prod-builder
+FROM dhi.io/php:8.2.33-debian13-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
@@ -21,11 +21,10 @@ COPY prebuildfs /
 RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   /usr/sbin/install_packages \
-    ca-certificates \
-    curl \
     dash \
     git \
     krb5-user \
+    libc-l10n \
     libbz2-1.0 \
     libcom-err2 \
     libcrypt1 \
@@ -172,7 +171,7 @@ FROM dhi.io/nginx:1-debian13-dev AS nginx-builder
 # Dev Image
 # ===========
 # dev-image stage
-FROM dhi.io/php:8.2.32-debian13-dev AS dev-image
+FROM dhi.io/php:8.2.33-debian13-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
@@ -243,7 +242,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 # Prod Image
 # ===========
-FROM dhi.io/php:8.2.32-debian13-fpm AS prod-image
+FROM dhi.io/php:8.2.33-debian13-fpm AS prod-image
 ARG UID
 ARG GID
 

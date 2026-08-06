@@ -4,8 +4,8 @@ ARG WITH_OPENSWOOLE=0
 ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:8.2.32-alpine3.22-fpm AS prod-builder
-FROM dhi.io/php:8.2.32-alpine3.22-dev AS builder
+FROM dhi.io/php:8.2.33-alpine3.22-fpm AS prod-builder
+FROM dhi.io/php:8.2.33-alpine3.22-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
@@ -140,7 +140,7 @@ FROM dhi.io/nginx:1-alpine3.22-dev AS nginx-builder
 # Dev Image
 # ===========
 # dev-image stage
-FROM dhi.io/php:8.2.32-alpine3.22-dev AS dev-image
+FROM dhi.io/php:8.2.33-alpine3.22-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
@@ -206,7 +206,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 # Prod Image
 # ===========
-FROM dhi.io/php:8.2.32-alpine3.22-fpm AS prod-image
+FROM dhi.io/php:8.2.33-alpine3.22-fpm AS prod-image
 ARG UID
 ARG GID
 
