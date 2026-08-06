@@ -9,14 +9,13 @@ if [ -e /lib/apk/db/installed ]; then
 fi
 
 ARGS="$*"
-# NO_RECOMMENDS="--no-install-recommends"
-NO_RECOMMENDS=""
+NO_RECOMMENDS="--no-install-recommends"
 RECOMMENDS="--install-recommends"
 if [ $pm == 'dpkg' ]; then
-	if [[ $ARGS =~ "$RECOMMENDS" ]]; then
-		NO_RECOMMENDS=""
-		ARGS=$(sed "s/$RECOMMENDS//g" <<<"$ARGS")
-	fi
+	# if [[ $ARGS =~ "$RECOMMENDS" ]]; then
+	# 	NO_RECOMMENDS=""
+	# 	ARGS=$(sed "s/$RECOMMENDS//g" <<<"$ARGS")
+	# fi
 
 	echo "Installing $ARGS"
 
