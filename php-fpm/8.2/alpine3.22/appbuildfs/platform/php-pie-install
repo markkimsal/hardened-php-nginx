@@ -1,0 +1,15 @@
+#!/bin/sh
+
+EXPECTED_CHECKSUM="ac2012b94392f73e60b36be8092f5ac382eb19819e1ce07d6245081186dbe6bf"
+php -r "copy('https://github.com/php/pie/releases/download/1.4.6/pie-Linux-X64', 'pie.phar');"
+ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha256', 'pie.phar');")"
+
+if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]
+then
+    >&2 echo 'ERROR: Invalid installer checksum ' $ACTUAL_CHECKSUM
+    rm pie.phar
+    exit 1
+fi
+
+mv pie.phar /opt/php/bin/pie
+chmod a+x /opt/php/bin/pie

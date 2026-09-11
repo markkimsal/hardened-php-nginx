@@ -31,6 +31,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
     freetype \
     freetype-dev \
     libwebp-dev \
+    xz-libs \
+    xz-dev \
     zlib \
     zlib-dev \
     bash \
@@ -41,6 +43,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
 COPY appbuildfs /
+RUN bash /platform/php-pie-install
 
 RUN DOCKER_EXTENSIONS=( \
   "gd --with-freetype --with-jpeg --with-webp" \
@@ -73,21 +76,22 @@ for COMPONENT in "${DOCKER_DEFAULT_EXTENSIONS[@]}"; do \
     bash ./docker-php-ext-enable ${COMPONENT} ; \
 done
 
-RUN pecl_extensions=( \
-  "xdebug" \
-  "redis" \
+RUN pie_extensions=( \
+  "xdebug/xdebug" \
+  "phpredis/phpredis" \
 ); \
-for component in "${pecl_extensions[@]}"; do \
-  pecl install ${component}; \
+cd /platform/; \
+for component in "${pie_extensions[@]}"; do \
+  /opt/php/bin/pie install --skip-enable-extension ${component}; \
 done
 
+RUN pecl channel-update pecl.php.net
+
 # GRPC
-RUN set -ex \
-    pecl install grpc-1.81.0;
+RUN pecl install grpc-1.81.0;
 
 # PROTOBUF
-RUN set -ex \
-    pecl install protobuf-5.35.1;
+RUN pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
@@ -99,7 +103,7 @@ RUN set -ex \
 RUN set -ex \
     &&  if [ "$WITH_OPENSWOOLE" -ne "0" ] ; then \
         pecl install openswoole-25.2.0; \
-    	  bash /platform/docker-php-ext-enable openswoole ; \
+        bash /platform/docker-php-ext-enable openswoole ; \
     fi
 
 SHELL ["/bin/bash",  "-o", "nounset", "-c"]

@@ -76,6 +76,8 @@
 			"freetype",
 			"freetype-dev",
 			"libwebp-dev",
+			"xz-libs",
+			"xz-dev",
 			"zlib",
 			"zlib-dev",
 			"bash",
