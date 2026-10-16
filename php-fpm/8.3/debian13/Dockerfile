@@ -279,6 +279,8 @@ COPY --from=builder /lib/x86_64-linux-gnu/libcrypt.so.1 \
 # RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/group
 COPY --from=builder /etc/prod-passwd /etc/passwd
 COPY --from=builder /etc/prod-group  /etc/group
+# update existing /home/nonroot uid:gid to match
+RUN mkdir -p /home/nonroot && chown nonroot:nonroot /home/nonroot
 
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
