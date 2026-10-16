@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
   /usr/sbin/install_packages \
     dash \
     git \
-    krb5-user \
+    libkrb5-3 \
     libc-l10n \
     libbz2-1.0 \
     libcom-err2 \
