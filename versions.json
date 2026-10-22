@@ -1,21 +1,21 @@
 {
 	"versions": {
 		"8.2": {
-			"version": "8.2.33",
+			"version": "8.2.35",
 			"variants": [
 				"debian13",
 				"alpine3.22"
 			]
 		},
 		"8.3": {
-			"version": "8.3.33",
+			"version": "8.3.36",
 			"variants": [
 				"debian13",
 				"alpine3.22"
 			]
 		},
 		"8.4": {
-			"version": "8.4.24",
+			"version": "8.4.27",
 			"variants": [
 				"debian13",
 				"alpine3.22"
