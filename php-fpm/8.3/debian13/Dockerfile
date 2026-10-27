@@ -169,6 +169,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
 # ===========
 # nginx-builder stage for nginx-deps.tar
 FROM dhi.io/nginx:1-debian13-dev AS nginx-builder
+RUN mkdir -p /var/cache/nginx
 
 # Dev Image
 # ===========

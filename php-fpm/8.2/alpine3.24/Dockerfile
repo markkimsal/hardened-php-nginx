@@ -4,14 +4,14 @@ ARG WITH_OPENSWOOLE=0
 ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:8.3.36-alpine3.22-fpm AS prod-builder
-FROM dhi.io/php:8.3.36-alpine3.22-dev AS builder
+FROM dhi.io/php:8.2.35-alpine3.24-fpm AS prod-builder
+FROM dhi.io/php:8.2.35-alpine3.24-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
 ARG WITH_OTEL
 
-LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-nginx:8.3" \
+LABEL org.opencontainers.image.base.name="docker.io/markkimsal/hardened-php-nginx:8.2" \
       org.opencontainers.image.description="PHP-FPM, Nginx, groundcontrol" \
       org.opencontainers.image.title="php-fpm-nginx"
 
@@ -102,7 +102,7 @@ RUN set -ex \
 # SWOOLE
 RUN set -ex \
     &&  if [ "$WITH_OPENSWOOLE" -ne "0" ] ; then \
-        pecl install openswoole; \
+        pecl install openswoole-25.2.0; \
         bash /platform/docker-php-ext-enable openswoole ; \
     fi
 
@@ -139,12 +139,13 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
 # Nginx Builder
 # ===========
 # nginx-builder stage for nginx-deps.tar
-FROM dhi.io/nginx:1-alpine3.22-dev AS nginx-builder
+FROM dhi.io/nginx:1-alpine3.24-dev AS nginx-builder
+RUN mkdir -p /var/cache/nginx
 
 # Dev Image
 # ===========
 # dev-image stage
-FROM dhi.io/php:8.3.36-alpine3.22-dev AS dev-image
+FROM dhi.io/php:8.2.35-alpine3.24-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
@@ -152,8 +153,8 @@ RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/grou
 RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 
 # Copy binaries, scripts, and config.
-COPY --from=builder /opt/php-8.3/lib /opt/php-8.3/lib
-COPY --from=builder /opt/php-8.3/etc /opt/php-8.3/etc
+COPY --from=builder /opt/php-8.2/lib /opt/php-8.2/lib
+COPY --from=builder /opt/php-8.2/etc /opt/php-8.2/etc
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
@@ -169,9 +170,9 @@ COPY --from=builder /usr/lib/libffi.so.8 \
     /usr/lib/libcrypto.so.3 \
     /usr/lib/libz.so.1 \
     /usr/lib/
-COPY --from=prod-builder /opt/php-8.3/sbin/php-fpm /opt/php-8.3/sbin/php-fpm
-COPY --from=prod-builder /opt/php-8.3/etc/php-fpm.conf /opt/php-8.3/etc/php-fpm.conf
-COPY --from=prod-builder /opt/php-8.3/etc/php-fpm.d /opt/php-8.3/etc/php-fpm.d
+COPY --from=prod-builder /opt/php-8.2/sbin/php-fpm /opt/php-8.2/sbin/php-fpm
+COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.conf /opt/php-8.2/etc/php-fpm.conf
+COPY --from=prod-builder /opt/php-8.2/etc/php-fpm.d /opt/php-8.2/etc/php-fpm.d
 
 ### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
@@ -210,15 +211,15 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 # Prod Image
 # ===========
-FROM dhi.io/php:8.3.36-alpine3.22-fpm AS prod-image
+FROM dhi.io/php:8.2.35-alpine3.24-fpm AS prod-image
 ARG UID
 ARG GID
 
 # Copy binaries, scripts, and config.
 ### Ground Control
-COPY --from=builder /opt/php-8.3/lib /opt/php-8.3/lib
-COPY --from=builder /opt/php-8.3/etc /opt/php-8.3/etc
-COPY --from=builder /opt/php-8.3/bin/php /opt/php-8.3/bin/php
+COPY --from=builder /opt/php-8.2/lib /opt/php-8.2/lib
+COPY --from=builder /opt/php-8.2/etc /opt/php-8.2/etc
+COPY --from=builder /opt/php-8.2/bin/php /opt/php-8.2/bin/php
 
 
 COPY --from=builder /usr/lib /usr/lib

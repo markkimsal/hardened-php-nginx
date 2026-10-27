@@ -34,7 +34,7 @@ RUN export LC_ALL=C.utf8
 <?php if (str_contains($versionTag, 'alpine')): ?>
 RUN --mount=type=cache,target=/var/cache/apk \
     /usr/sbin/install_packages \
-    <?php builder_deps('alpine3.22'); ?>
+    <?php builder_deps('alpine3.24'); ?>
 <?php endif; ?>
 
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
@@ -137,6 +137,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" \
 # ===========
 # nginx-builder stage for nginx-deps.tar
 FROM dhi.io/nginx:1-<?php echo $variant; ?>-dev AS nginx-builder
+RUN mkdir -p /var/cache/nginx
 
 # Dev Image
 # ===========
