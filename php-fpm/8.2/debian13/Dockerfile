@@ -26,6 +26,8 @@ RUN --mount=type=cache,target=/var/cache/apt \
     libkrb5-3 \
     libc-l10n \
     libbz2-1.0 \
+    libbrotli1=1.1.0-2+deb13u1+dhi1 \
+    libbrotli-dev \
     libcom-err2 \
     libcrypt1 \
     libffi8 \
@@ -62,10 +64,10 @@ RUN --mount=type=cache,target=/var/cache/apt \
     libicu-dev \
     cron
 
-RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
-RUN locale-gen en_US.UTF-8
-RUN update-locale en_US.UTF-8
-RUN update-locale C.utf8
+# RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+# RUN locale-gen en_US.UTF-8
+# RUN update-locale en_US.UTF-8
+# RUN update-locale C.utf8
 RUN export LC_ALL=C.utf8
 
 
