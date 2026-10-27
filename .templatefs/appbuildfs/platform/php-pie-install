@@ -1,7 +1,9 @@
 #!/bin/sh
 
+cd /tmp
+
 EXPECTED_CHECKSUM="19a31ddd4bfd08b9eb5eaad2e5f63e76e7919cae7683852da41c80da704ad6c0"
-php -r "copy('https://github.com/php/pie/releases/download/1.4.9/pie.phar', 'pie.phar');"
+php -d allow_url_fopen=1 -r "copy('https://github.com/php/pie/releases/download/1.4.9/pie.phar', 'pie.phar');"
 if [ $? -ne 0 ]
 then
     >&2 echo 'ERROR: unable to download'
@@ -9,6 +11,7 @@ then
 fi
 
 ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha256', 'pie.phar');")"
+echo "actual checksum = " $ACTUAL_CHECKSUM
 
 if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]
 then
