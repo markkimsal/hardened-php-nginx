@@ -57,7 +57,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
     tzdata \
     libpcre2-dev \
     libpcre2-posix3 \
-    libzip5 \
     libzip-dev \
     zlib1g-dev \
     zlib1g \
