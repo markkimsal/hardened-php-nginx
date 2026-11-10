@@ -85,10 +85,10 @@ done
 RUN pecl channel-update pecl.php.net
 
 # GRPC
-RUN pecl install grpc-1.81.0;
+#RUN pecl install grpc-1.81.0;
 
 # PROTOBUF
-RUN pecl install protobuf-5.35.1;
+#RUN pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
@@ -120,18 +120,7 @@ RUN \
 # so we will build passwd and group here for prod image to copy
 RUN echo "nonroot:x:${GID}:nonroot\nshadow:x:42:\nnobody:x:65534:" >> /etc/prod-group
 RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/sh" >> /etc/prod-passwd
-
-# cron / supercronic
-
-# Latest releases available at https://github.com/aptible/supercronic/releases
-ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.49/supercronic-linux-amd64 \
-    SUPERCRONIC_SHA1SUM=e63c11a9726b775a6a11801e81af4f3fb926aa68 \
-    SUPERCRONIC=supercronic-linux-amd64
-
-RUN curl -fsSLO "$SUPERCRONIC_URL" \
- && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
- && chmod +x "$SUPERCRONIC" \
- && mv "$SUPERCRONIC" "/usr/bin/supercronic"
+RUN mkdir -p /home/nonroot/.config && chown -R ${UID}:${GID} /home/nonroot
 
 # Nginx Builder
 # ===========
@@ -150,26 +139,23 @@ RUN sed -ie "s/65532/${GID}/" /etc/passwd && sed -ie "s/65532/${GID}/" /etc/grou
 RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 
 # Copy binaries, scripts, and config.
-COPY --from=builder /opt/php-<?= $majorVersion ?>/lib /opt/php-<?= $majorVersion ?>/lib
-COPY --from=builder /opt/php-<?= $majorVersion ?>/etc /opt/php-<?= $majorVersion ?>/etc
+COPY --from=builder /usr/lib/php /usr/lib/php
+COPY --from=builder /etc/php-<?= $majorVersion ?> /etc/php-<?= $majorVersion ?>
+
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=builder <?php extension_deps(); ?>
 
-COPY --from=prod-builder /opt/php-<?= $majorVersion ?>/sbin/php-fpm /opt/php-<?= $majorVersion ?>/sbin/php-fpm
-COPY --from=prod-builder /opt/php-<?= $majorVersion ?>/etc/php-fpm.conf /opt/php-<?= $majorVersion ?>/etc/php-fpm.conf
-COPY --from=prod-builder /opt/php-<?= $majorVersion ?>/etc/php-fpm.d /opt/php-<?= $majorVersion ?>/etc/php-fpm.d
+COPY --from=prod-builder /usr/sbin/php-fpm-<?= $majorVersion ?> /usr/sbin/php-fpm-<?= $majorVersion ?>
+
+COPY --from=prod-builder /usr/sbin/php-fpm-<?= $majorVersion ?> /usr/sbin/php-fpm
+COPY --from=prod-builder /etc/php-<?= $majorVersion ?>/php-fpm.conf /etc/php-<?= $majorVersion ?>/php-fpm.conf
+COPY --from=prod-builder /etc/php-<?= $majorVersion ?>/php-fpm.d /etc/php-<?= $majorVersion ?>/php-fpm.d
 
 ### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
-
-# cron / supercronic
-COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
-# COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
-# COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
-# COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 COPY prebuildfs /
 COPY appbuildfs /
@@ -204,14 +190,16 @@ ARG UID
 ARG GID
 
 # Copy binaries, scripts, and config.
-### Ground Control
-COPY --from=builder /opt/php-<?= $majorVersion ?>/lib /opt/php-<?= $majorVersion ?>/lib
-COPY --from=builder /opt/php-<?= $majorVersion ?>/etc /opt/php-<?= $majorVersion ?>/etc
-COPY --from=builder /opt/php-<?= $majorVersion ?>/bin/php /opt/php-<?= $majorVersion ?>/bin/php
+### PHP
+COPY --from=builder /usr/lib/php /usr/lib/php
+COPY --from=builder /etc/php-<?= $majorVersion ?> /etc/php-<?= $majorVersion ?>
+
+COPY --from=builder /usr/bin/php-<?= $majorVersion ?> /usr/bin/php-<?= $majorVersion ?>
+
+COPY --from=builder /usr/bin/php-<?= $majorVersion ?> /usr/bin/php
 
 <?php if (str_contains($versionTag, 'debian')): ?>
-#COPY --from=builder /usr/bin/tar /usr/bin/tar
-COPY --from=builder /lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libacl.so.1 
+COPY --from=builder /lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libacl.so.1
 COPY --from=builder /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libselinux.so.1
 COPY --from=builder <?php extension_deps(); ?>
 <?php endif; ?>
@@ -228,6 +216,7 @@ COPY --from=builder /etc/prod-group  /etc/group
 # update existing /home/nonroot uid:gid to match
 COPY --from=builder /home/nonroot /home/nonroot
 
+### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
 
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
@@ -235,12 +224,6 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/ng
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
-
-# cron / supercronic
-COPY --chown=nonroot:nonroot --from=builder /usr/bin/supercronic /usr/bin/supercronic
-# COPY --chown=nonroot:nonroot --from=builder /etc/cron.d /etc/cron.d
-# COPY --chown=nonroot:nonroot --from=builder /var/spool/cron /var/spool/cron
-# COPY --chown=nonroot:nonroot --from=builder /usr/sbin/cron /usr/sbin/cron
 
 <?php if (str_contains($versionTag, 'debian')): ?>
 COPY --chown=nonroot:nonroot --from=builder /usr/bin/dash /bin/sh

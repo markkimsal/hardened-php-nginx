@@ -20,8 +20,5 @@ then
     exit 1
 fi
 
-ls -alh /opt/
-pwd
-mkdir -p /opt/php/bin
 mv pie.phar /opt/php/bin/pie
 chmod a+x /opt/php/bin/pie
