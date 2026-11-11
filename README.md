@@ -7,7 +7,6 @@ One image for your local, CI, and prod environments.  One image for your FPM, sc
 Items this project adds to the dhi.io hardened `*-fpm` image:
   * dash
   * nginx
-  * supercronic (container ready cron alternative)
   * php (cli sapi)
   * various php extensions
 
@@ -26,7 +25,7 @@ Items this project adds to the dhi.io hardened `*-dev` image:
 
 This project's `*-dev` image is meant to be used as a local development image AND as a CI/CD pipeline image.
 
-The hardened production image `*-fpm` contains dash as shell, `supercronic` and `artisan schedule:work` both require `/bin/sh` to operate.
+The hardened production image `*-fpm` contains dash as shell, `artisan schedule:work` requires `/bin/sh` to operate.
 
 
 |                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
@@ -34,7 +33,6 @@ The hardened production image `*-fpm` contains dash as shell, `supercronic` and 
 | php-fpm              | X                   |  X                 | X                       | X               |
 | php (cli)            | X                   |                    | X                       | X               |
 | nginx                | X                   |                    | X                       |                 |
-| supercronic          | X                   |                    | X                       |                 |
 | composer             |                     |                    | X                       |                 |
 | git                  |                     |                    | X                       |                 |
 | jq                   |                     |                    | X                       |                 |
@@ -99,7 +97,7 @@ Run a basic PHP-fpm & Nginx setup
 ```toml
 [[processes]]
 name = "php"
-run = [ "/opt/php/sbin/php-fpm" ]
+run = [ "/usr/sbin/php-fpm" ]
 stop="SIGQUIT"
 
 [[processes]]
@@ -131,7 +129,7 @@ services:
             - '7071:8080'
         volumes:
             - '.:/app'
-            - './conf.d/xdebug.ini:/opt/php-8.2/etc/php/conf.d/xdebug.ini'
+            - './conf.d/xdebug.ini:/etc/php-8.2/conf.d/xdebug.ini'
 ```
 
 Usage with Laravel
@@ -155,7 +153,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/worker-queue.toml"]
 ```toml
 [[processes]]
 name = "artisan-queue"
-run = ["/opt/php/bin/php", "artisan", "queue:work", "{{QUEUE_NAME}}", "--tries={{QUEUE_RETRIES}}", "--backoff={{QUEUE_BACKOFF}}"]
+run = ["/usr/bin/php", "artisan", "queue:work", "{{QUEUE_NAME}}", "--tries={{QUEUE_RETRIES}}", "--backoff={{QUEUE_BACKOFF}}"]
 stop="SIGQUIT"
 ```
 
@@ -196,13 +194,13 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/artisan-scheduler.toml"]
 
 ```toml
 [[processes]]
-name = "cron"
-run = ["/usr/bin/supercronic", "/platform/my-scheduled.crontab"]
-```
+name = "laravel-container-startup"
+pre = [ "php", "artisan", "optimize" ]
 
-Docker cli command
-```
-docker run -v $(pwd)/my-scheduled.crontab:/platform/my-scheduled.crontab  artisan schedule:run" ...
+[[schedules]]
+name = "laravel-scheduler"
+schedule = "0/1 * * * * *"
+task = { command =[ "php", "artisan", "schedule:run"] }
 ```
 
 Docker compose file:
@@ -213,8 +211,6 @@ services:
         entrypoint:
           - /platform/groundcontrol
           - /platform/artisan-schedule.toml
-        volumes:
-          - ./my-scheduled.crontab:/platform/my-scheduled.crontab
 
 ```
 
@@ -234,7 +230,7 @@ pre = "php artisan migrate -f"
 
 [[processes]]
 name = "php"
-run = [ "/opt/php-8.2/sbin/php-fpm" ]
+run = [ "/usr/sbin/php-fpm" ]
 stop="SIGQUIT"
 
 [[processes]]

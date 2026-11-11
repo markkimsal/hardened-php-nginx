@@ -1,7 +1,8 @@
 [[processes]]
-name = "setup-cron"
-pre = ["php",  "-r", "file_put_contents('/etc/cron.d/laravel-artisan-schedule-run', '* * * * * nonroot {{CRON_COMMAND}} >> /dev/null 2>&1');\n" ]
+name = "laravel-container-startup"
+pre = [ "php", "artisan", "optimize" ]
 
-[[processes]]
-name = "cron"
-run = ["/usr/sbin/cron", "-f"]
+[[schedules]]
+name = "laravel-scheduler"
+schedule = "0/1 * * * * *"
+task = { command =[ "php", "artisan", "schedule:run"] }
