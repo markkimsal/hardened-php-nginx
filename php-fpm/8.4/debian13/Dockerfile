@@ -118,10 +118,10 @@ done
 RUN pecl channel-update pecl.php.net
 
 # GRPC
-#RUN pecl install grpc-1.81.0;
+RUN pecl install grpc-1.81.0;
 
 # PROTOBUF
-#RUN pecl install protobuf-5.35.1;
+RUN pecl install protobuf-5.35.1;
 
 # OPENTELEMETRY
 RUN set -ex \
