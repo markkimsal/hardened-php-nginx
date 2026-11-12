@@ -4,7 +4,7 @@ ARG WITH_OPENSWOOLE=0
 ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:<?php echo $versionTag; ?>-fpm AS prod-builder
+FROM dhi.io/php:<?php echo $versionTag; ?>-fpm AS fpm-base
 FROM dhi.io/php:<?php echo $versionTag; ?>-dev AS builder
 ARG UID
 ARG GID
@@ -148,11 +148,11 @@ COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx-builder /etc/nginx /etc/nginx
 COPY --from=builder <?php extension_deps(); ?>
 
-COPY --from=prod-builder /usr/sbin/php-fpm-<?= $majorVersion ?> /usr/sbin/php-fpm-<?= $majorVersion ?>
+COPY --from=fpm-base /usr/sbin/php-fpm-<?= $majorVersion ?> /usr/sbin/php-fpm-<?= $majorVersion ?>
 
-COPY --from=prod-builder /usr/sbin/php-fpm-<?= $majorVersion ?> /usr/sbin/php-fpm
-COPY --from=prod-builder /etc/php-<?= $majorVersion ?>/php-fpm.conf /etc/php-<?= $majorVersion ?>/php-fpm.conf
-COPY --from=prod-builder /etc/php-<?= $majorVersion ?>/php-fpm.d /etc/php-<?= $majorVersion ?>/php-fpm.d
+COPY --from=fpm-base /usr/sbin/php-fpm-<?= $majorVersion ?> /usr/sbin/php-fpm
+COPY --from=fpm-base /etc/php-<?= $majorVersion ?>/php-fpm.conf /etc/php-<?= $majorVersion ?>/php-fpm.conf
+COPY --from=fpm-base /etc/php-<?= $majorVersion ?>/php-fpm.d /etc/php-<?= $majorVersion ?>/php-fpm.d
 
 ### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
@@ -222,7 +222,7 @@ COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
-COPY --from=nginx-builder /etc/nginx /etc/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
 <?php if (str_contains($versionTag, 'debian')): ?>

@@ -5,7 +5,47 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker:
+  build-builder:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['8.2', '8.3', '8.4']
+        platform: ['debian13']
+
+    steps:
+      - name: "Get datetime"
+        run: |
+          echo "datetime=$(date -u --rfc-3339=seconds)" >> $GITHUB_ENV
+        id: datetime
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push builder stage
+        uses: docker/build-push-action@v7
+        with:
+          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }},mode=max
+          context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
+          build-args: |
+            WITH_OPENSWOOLE=1
+            WITH_OTEL=1
+          target: builder
+          pull: true
+          push: true
+          tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-builder
+
+  build-prod:
+    needs: build-builder
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,8 +73,10 @@ jobs:
       - name: Build prod
         uses: docker/build-push-action@v7
         with:
-          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
-          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }},mode=max
+          cache-from: |
+            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
+            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod,mode=max
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           build-args: |
             WITH_OPENSWOOLE=1
@@ -48,11 +90,39 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ env.datetime }}
 
+  build-dev:
+    needs: build-builder
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['8.2', '8.3', '8.4']
+        platform: ['debian13']
+
+    steps:
+      - name: "Get datetime"
+        run: |
+          echo "datetime=$(date -u --rfc-3339=seconds)" >> $GITHUB_ENV
+        id: datetime
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          platforms: linux/amd64,linux/arm64
+
       - name: Build dev
         uses: docker/build-push-action@v7
         with:
-          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
-          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }},mode=max
+          cache-from: |
+            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
+            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-dev
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-dev,mode=max
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           # platforms: linux/amd64,linux/arm64
           target: dev-image
