@@ -5,7 +5,7 @@ Image that combines nginx with dhi.io hardened PHP.  Uses groundcontrol to manag
 One image for your local, CI, and prod environments.  One image for your FPM, scheduler, worker instances.
 
 Items this project adds to the dhi.io hardened `*-fpm` image:
-  * dash
+  * busybox
   * nginx
   * php (cli sapi)
   * various php extensions
@@ -25,7 +25,7 @@ Items this project adds to the dhi.io hardened `*-dev` image:
 
 This project's `*-dev` image is meant to be used as a local development image AND as a CI/CD pipeline image.
 
-The hardened production image `*-fpm` contains dash as shell, `artisan schedule:work` requires `/bin/sh` to operate.
+The hardened production image `*-fpm` contains busybox as shell, `artisan schedule:work` requires `/bin/sh` to operate.
 
 
 |                      | hardened/fpm (prod) | dhi.io/fpm (prod)  | hardened/dev (ci/local) | dhi.io/dev      |
