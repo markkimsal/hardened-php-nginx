@@ -61,9 +61,9 @@ function extension_deps() {
 }
 
 function openswoole_version(): string {
-	global $majorVersion;
-	if (str_contains($majorVersion, '8.2')) {
-		return 'openswoole/ext-openswoole:25.2.0';
-	}
+	// global $majorVersion;
+	// if (str_contains($majorVersion, '8.2')) {
+	// 	return 'openswoole/ext-openswoole:25.2.0';
+	// }
 	return 'openswoole/ext-openswoole';
 }
