@@ -64,7 +64,7 @@
 			"zlib1g-dev",
 			"zlib1g",
 			"libicu-dev",
-			"cron"
+			"unzip"
 		],
 		"alpine3.24": [
 			"busybox",

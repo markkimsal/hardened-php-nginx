@@ -77,31 +77,24 @@ done
 RUN pie_extensions=( \
   "xdebug/xdebug" \
   "phpredis/phpredis" \
+  "extport/protobuf:36.1" \
+  "grpc/grpc-php-ext:1.85.3" \
 ); \
 cd /platform/; \
 for component in "${pie_extensions[@]}"; do \
   /opt/php/bin/pie install --skip-enable-extension ${component}; \
 done
 
-RUN pecl channel-update pecl.php.net
-
-# GRPC
-RUN pecl install grpc-1.81.0;
-
-# PROTOBUF
-RUN pecl install protobuf-5.35.1;
-
 # OPENTELEMETRY
 RUN set -ex \
     &&  if [ "$WITH_OTEL" -ne "0" ] ; then \
-        pecl install opentelemetry; \
+        /opt/php/bin/pie install --skip-enable-extension open-telemetry/ext-opentelemetry; \
     fi
 
 # SWOOLE
 RUN set -ex \
     &&  if [ "$WITH_OPENSWOOLE" -ne "0" ] ; then \
-        pecl install openswoole-25.2.0; \
-        bash /platform/docker-php-ext-enable openswoole ; \
+        /opt/php/bin/pie install openswoole/ext-openswoole:25.2.0; \
     fi
 
 SHELL ["/bin/bash",  "-o", "nounset", "-c"]
