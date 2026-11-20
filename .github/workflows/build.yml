@@ -30,12 +30,24 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
 
+      - name: Build and push builder stage
+        uses: docker/build-push-action@v7
+        with:
+          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod
+          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod,mode=max
+          context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
+          build-args: |
+            WITH_OPENSWOOLE=1
+            WITH_OTEL=1
+          target: builder
+          pull: true
+          push: true
+          tags: docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-builder
+
       - name: Build prod
         uses: docker/build-push-action@v7
         with:
-          cache-from: |
-            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}
-            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod
+          cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod
           cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod,mode=max
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           build-args: |
@@ -80,7 +92,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           cache-from: |
-            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod
+            type=registry,ref=docker.io/markkimsal/hardened-php-nginx:${{ matrix.version }}-${{ matrix.platform }}-builder
             type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-dev
           cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-dev,mode=max
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}

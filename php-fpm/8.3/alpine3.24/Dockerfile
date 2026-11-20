@@ -6,8 +6,6 @@ ARG WITH_OTEL=0
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
 FROM dhi.io/php:8.3.37-alpine3.24-fpm AS fpm-base
 FROM dhi.io/php:8.3.37-alpine3.24-dev AS builder
-ARG UID
-ARG GID
 ARG WITH_OPENSWOOLE
 ARG WITH_OTEL
 
@@ -121,6 +119,8 @@ RUN \
 # build-arg interpolation _requires_ a shell, no matter what docker build logs shows you
 # (when RUN is used with exec style, JSON style params)
 # so we will build passwd and group here for prod image to copy
+ARG UID
+ARG GID
 RUN echo "nonroot:x:${GID}:nonroot\nshadow:x:42:\nnobody:x:65534:" >> /etc/prod-group
 RUN echo "nonroot:x:${UID}:${GID}:nonroot:/home/nonroot:/bin/sh\nnobody:x:65534:65534:nobody:/nonexistent:/bin/sh" >> /etc/prod-passwd
 RUN mkdir -p /home/nonroot/.config && chown -R ${UID}:${GID} /home/nonroot
