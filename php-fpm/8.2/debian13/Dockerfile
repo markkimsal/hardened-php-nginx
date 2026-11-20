@@ -127,7 +127,7 @@ RUN set -ex \
 # SWOOLE
 RUN set -ex \
     &&  if [ "$WITH_OPENSWOOLE" -ne "0" ] ; then \
-        /opt/php/bin/pie install openswoole/ext-openswoole; \
+        /opt/php/bin/pie install openswoole/ext-openswoole:v25.2.0; \
     fi
 
 SHELL ["/bin/bash",  "-o", "nounset", "-c"]
