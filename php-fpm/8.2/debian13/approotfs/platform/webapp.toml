@@ -1,6 +1,6 @@
 [[processes]]
 name = "php"
-run = [ "/opt/php/sbin/php-fpm" ]
+run = [ "/usr/sbin/php-fpm" ]
 stop="SIGQUIT"
 
 [[processes]]

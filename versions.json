@@ -1,21 +1,21 @@
 {
 	"versions": {
 		"8.2": {
-			"version": "8.2.35",
+			"version": "8.2.36",
 			"variants": [
 				"debian13",
 				"alpine3.24"
 			]
 		},
 		"8.3": {
-			"version": "8.3.36",
+			"version": "8.3.37",
 			"variants": [
 				"debian13",
 				"alpine3.24"
 			]
 		},
 		"8.4": {
-			"version": "8.4.27",
+			"version": "8.4.28",
 			"variants": [
 				"debian13",
 				"alpine3.24"
@@ -24,7 +24,7 @@
 	},
 	"builder_deps": {
 		"debian13": [
-			"dash",
+			"busybox-static",
 			"git",
 			"libkrb5-3",
 			"libc-l10n",

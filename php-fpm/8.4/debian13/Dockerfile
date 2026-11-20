@@ -4,8 +4,8 @@ ARG WITH_OPENSWOOLE=0
 ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:8.4.27-debian13-fpm AS prod-builder
-FROM dhi.io/php:8.4.27-debian13-dev AS builder
+FROM dhi.io/php:8.4.28-debian13-fpm AS fpm-base
+FROM dhi.io/php:8.4.28-debian13-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
@@ -21,7 +21,7 @@ COPY prebuildfs /
 RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   /usr/sbin/install_packages \
-    dash \
+    busybox-static \
     git \
     libkrb5-3 \
     libc-l10n \
@@ -68,6 +68,9 @@ RUN --mount=type=cache,target=/var/cache/apt \
 # RUN update-locale en_US.UTF-8
 # RUN update-locale C.utf8
 RUN export LC_ALL=C.utf8
+RUN mkdir /busybox-bin \
+    && cp /bin/busybox /busybox-bin/busybox \
+    && /busybox-bin/busybox --install /busybox-bin
 
 
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
@@ -164,7 +167,7 @@ RUN mkdir -p /var/cache/nginx
 # Dev Image
 # ===========
 # dev-image stage
-FROM dhi.io/php:8.4.27-debian13-dev AS dev-image
+FROM dhi.io/php:8.4.28-debian13-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
@@ -194,10 +197,10 @@ COPY --from=builder /lib/x86_64-linux-gnu/libcrypt.so.1 \
     /lib/x86_64-linux-gnu/libcrypto.so.3 \
     /lib/x86_64-linux-gnu/libz.so.1 \
     /lib/x86_64-linux-gnu/
-COPY --from=prod-builder /usr/sbin/php-fpm-8.4 /usr/sbin/php-fpm-8.4
-COPY --from=prod-builder /usr/sbin/php-fpm-8.4 /usr/sbin/php-fpm
-COPY --from=prod-builder /etc/php-8.4/php-fpm.conf /etc/php-8.4/php-fpm.conf
-COPY --from=prod-builder /etc/php-8.4/php-fpm.d /etc/php-8.4/php-fpm.d
+COPY --from=fpm-base /usr/sbin/php-fpm-8.4 /usr/sbin/php-fpm-8.4
+COPY --from=fpm-base /usr/sbin/php-fpm-8.4 /usr/sbin/php-fpm
+COPY --from=fpm-base /etc/php-8.4/php-fpm.conf /etc/php-8.4/php-fpm.conf
+COPY --from=fpm-base /etc/php-8.4/php-fpm.d /etc/php-8.4/php-fpm.d
 
 ### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
@@ -230,7 +233,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 # Prod Image
 # ===========
-FROM dhi.io/php:8.4.27-debian13-fpm AS prod-image
+FROM dhi.io/php:8.4.28-debian13-fpm AS prod-image
 ARG UID
 ARG GID
 
@@ -274,10 +277,10 @@ COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
-COPY --from=nginx-builder /etc/nginx /etc/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
-COPY --chown=nonroot:nonroot --from=builder /usr/bin/dash /bin/sh
+COPY --from=builder /busybox-bin /bin
 
 
 COPY --chown=nonroot:nonroot approotfs /

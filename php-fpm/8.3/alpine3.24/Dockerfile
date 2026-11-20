@@ -4,8 +4,8 @@ ARG WITH_OPENSWOOLE=0
 ARG WITH_OTEL=0
 
 FROM docker.io/markkimsal/groundcontrol:latest AS groundcontrolimage
-FROM dhi.io/php:8.3.36-alpine3.24-fpm AS prod-builder
-FROM dhi.io/php:8.3.36-alpine3.24-dev AS builder
+FROM dhi.io/php:8.3.37-alpine3.24-fpm AS fpm-base
+FROM dhi.io/php:8.3.37-alpine3.24-dev AS builder
 ARG UID
 ARG GID
 ARG WITH_OPENSWOOLE
@@ -134,7 +134,7 @@ RUN mkdir -p /var/cache/nginx
 # Dev Image
 # ===========
 # dev-image stage
-FROM dhi.io/php:8.3.36-alpine3.24-dev AS dev-image
+FROM dhi.io/php:8.3.37-alpine3.24-dev AS dev-image
 ARG UID
 ARG GID
 #make nonroot user the same on dev and prod
@@ -159,10 +159,10 @@ COPY --from=builder /usr/lib/libffi.so.8 \
     /usr/lib/libcrypto.so.3 \
     /usr/lib/libz.so.1 \
     /usr/lib/
-COPY --from=prod-builder /usr/sbin/php-fpm-8.3 /usr/sbin/php-fpm-8.3
-COPY --from=prod-builder /usr/sbin/php-fpm-8.3 /usr/sbin/php-fpm
-COPY --from=prod-builder /etc/php-8.3/php-fpm.conf /etc/php-8.3/php-fpm.conf
-COPY --from=prod-builder /etc/php-8.3/php-fpm.d /etc/php-8.3/php-fpm.d
+COPY --from=fpm-base /usr/sbin/php-fpm-8.3 /usr/sbin/php-fpm-8.3
+COPY --from=fpm-base /usr/sbin/php-fpm-8.3 /usr/sbin/php-fpm
+COPY --from=fpm-base /etc/php-8.3/php-fpm.conf /etc/php-8.3/php-fpm.conf
+COPY --from=fpm-base /etc/php-8.3/php-fpm.d /etc/php-8.3/php-fpm.d
 
 ### Ground Control
 COPY --from=groundcontrolimage /groundcontrol /platform/
@@ -195,7 +195,7 @@ ENTRYPOINT ["/platform/groundcontrol", "/platform/webapp.toml"]
 
 # Prod Image
 # ===========
-FROM dhi.io/php:8.3.36-alpine3.24-fpm AS prod-image
+FROM dhi.io/php:8.3.37-alpine3.24-fpm AS prod-image
 ARG UID
 ARG GID
 
@@ -223,7 +223,7 @@ COPY --from=groundcontrolimage /groundcontrol /platform/
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
-COPY --from=nginx-builder /etc/nginx /etc/nginx
+COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
 COPY --chown=nonroot:nonroot --from=builder /bin/busybox /bin/sh
