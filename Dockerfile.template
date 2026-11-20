@@ -146,6 +146,7 @@ RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 # Copy binaries, scripts, and config.
 COPY --from=builder /usr/lib/php /usr/lib/php
 COPY --from=builder /etc/php-<?= $majorVersion ?> /etc/php-<?= $majorVersion ?>
+
 <?php if (str_contains($versionTag, 'debian')): ?>
 COPY --from=builder /busybox-bin /bin
 <?php endif; ?>

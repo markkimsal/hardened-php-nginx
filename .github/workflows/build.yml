@@ -34,7 +34,9 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           cache-from: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod
-          cache-to: type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod,mode=max
+          cache-to: |
+            type=inline
+            type=registry,ref=markkimsal/hardened-php-nginx:buildcache-${{ matrix.version }}-${{ matrix.platform }}-prod,mode=max
           context: php-fpm/${{ matrix.version }}/${{ matrix.platform }}
           build-args: |
             WITH_OPENSWOOLE=1

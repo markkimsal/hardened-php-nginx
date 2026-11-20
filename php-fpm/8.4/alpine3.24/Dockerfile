@@ -137,6 +137,7 @@ RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 # Copy binaries, scripts, and config.
 COPY --from=builder /usr/lib/php /usr/lib/php
 COPY --from=builder /etc/php-8.4 /etc/php-8.4
+
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
