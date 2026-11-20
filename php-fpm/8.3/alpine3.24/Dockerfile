@@ -176,7 +176,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   --mount=type=cache,target=/var/cache/apk \
   /usr/sbin/install_packages \
-  dash \
   git \
   jq \
   openssh-client \

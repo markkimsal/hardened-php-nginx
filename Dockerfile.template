@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 RUN export LC_ALL=C.utf8
 RUN mkdir /busybox-bin \
     && cp /bin/busybox /busybox-bin/busybox \
-    && /busybox-bin/busybox --install /busybox-bin
+    && /busybox-bin/busybox --install -s /busybox-bin
 <?php endif; ?>
 
 <?php if (str_contains($versionTag, 'alpine')): ?>
@@ -144,6 +144,9 @@ RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 # Copy binaries, scripts, and config.
 COPY --from=builder /usr/lib/php /usr/lib/php
 COPY --from=builder /etc/php-<?= $majorVersion ?> /etc/php-<?= $majorVersion ?>
+<?php if (str_contains($versionTag, 'debian')): ?>
+COPY --from=builder /busybox-bin /bin
+<?php endif; ?>
 
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
@@ -169,7 +172,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   --mount=type=cache,target=/var/cache/apk \
   /usr/sbin/install_packages \
-  dash \
   git \
   jq \
   openssh-client \

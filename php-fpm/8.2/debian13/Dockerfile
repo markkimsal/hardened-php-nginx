@@ -68,7 +68,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 RUN export LC_ALL=C.utf8
 RUN mkdir /busybox-bin \
     && cp /bin/busybox /busybox-bin/busybox \
-    && /busybox-bin/busybox --install /busybox-bin
+    && /busybox-bin/busybox --install -s /busybox-bin
 
 
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
@@ -176,7 +176,8 @@ RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 
 # Copy binaries, scripts, and config.
 COPY --from=builder /usr/lib/php /usr/lib/php
-COPY --from=builder /etc/php-8.2 /etc/php-8.2
+COPY --from=builder /etc/php-8.2 /etc/php-8.2COPY --from=builder /busybox-bin /bin
+
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
@@ -214,7 +215,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
   --mount=type=cache,target=/var/lib/apt/lists \
   --mount=type=cache,target=/var/cache/apk \
   /usr/sbin/install_packages \
-  dash \
   git \
   jq \
   openssh-client \
