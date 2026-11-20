@@ -147,10 +147,6 @@ RUN mkdir -p /home/nonroot && chown ${UID}:${GID} /home/nonroot
 COPY --from=builder /usr/lib/php /usr/lib/php
 COPY --from=builder /etc/php-<?= $majorVersion ?> /etc/php-<?= $majorVersion ?>
 
-<?php if (str_contains($versionTag, 'debian')): ?>
-COPY --from=builder /busybox-bin /bin
-<?php endif; ?>
-
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/log/nginx /var/log/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /var/cache/nginx /var/cache/nginx
 COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
@@ -186,6 +182,11 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 #install composer
 RUN /platform/docker-composer-install
+
+<?php if (str_contains($versionTag, 'debian')): ?>
+COPY --from=builder /busybox-bin /bin
+<?php endif; ?>
+
 
 USER nonroot
 WORKDIR "/app"
