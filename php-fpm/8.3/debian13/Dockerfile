@@ -68,7 +68,9 @@ RUN --mount=type=cache,target=/var/cache/apt \
 RUN export LC_ALL=C.utf8
 RUN mkdir /busybox-bin \
     && cp /bin/busybox /busybox-bin/busybox \
-    && /busybox-bin/busybox --install -s /busybox-bin
+    && ln -sf /busybox-bin/busybox /bin/busybox \
+    && /bin/busybox --install -s /busybox-bin \
+    && rm -f /bin/busybox
 
 
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]

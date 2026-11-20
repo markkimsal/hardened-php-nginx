@@ -222,7 +222,7 @@ COPY --from=nginx-builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
-COPY --chown=nonroot:nonroot --from=builder /bin/busybox /bin/sh
+COPY --from=builder /bin/busybox /bin/sh
 
 
 COPY --chown=nonroot:nonroot approotfs /
