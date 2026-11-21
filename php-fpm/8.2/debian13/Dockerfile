@@ -224,6 +224,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 RUN /platform/docker-composer-install
 
 COPY --from=builder /busybox-bin /bin
+COPY --from=builder /busybox-bin/busybox /busybox-bin/busybox
 
 
 USER nonroot
@@ -280,6 +281,7 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 # nginx requires libcrypt.so.1, but another php-ext-dep also requires it
 
 COPY --from=builder /busybox-bin /bin
+COPY --from=builder /busybox-bin/busybox /busybox-bin/busybox
 
 
 COPY --chown=nonroot:nonroot approotfs /

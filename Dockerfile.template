@@ -187,6 +187,7 @@ RUN /platform/docker-composer-install
 
 <?php if (str_contains($versionTag, 'debian')): ?>
 COPY --from=builder /busybox-bin /bin
+COPY --from=builder /busybox-bin/busybox /busybox-bin/busybox
 <?php endif; ?>
 
 
@@ -238,6 +239,7 @@ COPY --chown=nonroot:nonroot --from=nginx-builder /etc/nginx /etc/nginx
 
 <?php if (str_contains($versionTag, 'debian')): ?>
 COPY --from=builder /busybox-bin /bin
+COPY --from=builder /busybox-bin/busybox /busybox-bin/busybox
 <?php endif; ?>
 <?php if (str_contains($versionTag, 'alpine')): ?>
 COPY --from=builder /bin/busybox /bin/sh
